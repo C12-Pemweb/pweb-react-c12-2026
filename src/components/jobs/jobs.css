@@ -1,0 +1,259 @@
+.skill-profile,
+.job-explorer {
+  margin: 24px 0;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #f1dce9;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(120, 50, 90, 0.05);
+}
+
+.section-title {
+  margin: 0 0 20px;
+  color: #352535;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.skill-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.skill-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 14px;
+  border: 1px solid #e7c8dc;
+  border-radius: 10px;
+  outline: none;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.skill-input:focus,
+.job-search:focus,
+.job-filter:focus {
+  border-color: #d946a3;
+  box-shadow: 0 0 0 3px rgba(217, 70, 163, 0.12);
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fce7f3;
+  color: #9d174d;
+  border: 1px solid #f9c5e3;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.skill-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #9d174d;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.skill-remove:hover {
+  color: #be185d;
+}
+
+.btn {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: #d946a3;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #be358b;
+}
+
+.btn-disabled,
+.btn:disabled {
+  background: #e5e7eb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.job-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.job-search,
+.job-filter {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 14px;
+  border: 1px solid #e7c8dc;
+  border-radius: 10px;
+  background: #fff;
+  outline: none;
+  font: inherit;
+}
+
+.job-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.job-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #f0dce9;
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.job-card:hover {
+  border-color: #e9a8d1;
+  box-shadow: 0 6px 20px rgba(120, 50, 90, 0.08);
+}
+
+.job-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.job-card h3 {
+  margin: 0;
+  color: #352535;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.job-company {
+  color: #6b5568;
+  font-weight: 600;
+}
+
+.job-card p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.job-card button {
+  margin-top: auto;
+}
+
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-high {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.match-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.match-low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.matched-skills,
+.missing-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.matched-skills span {
+  padding: 6px 10px;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.missing-skills span {
+  padding: 6px 10px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .job-list {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-profile,
+  .job-explorer {
+    padding: 16px;
+  }
+
+  .job-toolbar {
+    flex-direction: column;
+  }
+
+  .job-search,
+  .job-filter {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .job-card-header {
+    flex-direction: column;
+  }
+
+  .skill-form {
+    flex-direction: column;
+  }
+
+  .skill-input {
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
