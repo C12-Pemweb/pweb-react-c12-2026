@@ -110,7 +110,7 @@ export default function CvPreviewModal({
           {isPdf && blobUrl ? (
             <iframe
               className="cv-preview-frame"
-              src={blobUrl}
+              src={`${blobUrl}#navpanes=0&view=FitH`}
               title={`Preview ${cv.name}`}
             />
           ) : isImage && cv.dataUrl ? (
