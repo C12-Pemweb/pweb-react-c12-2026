@@ -439,33 +439,68 @@ export default function JobExplorer({
               })}
             </div>
 
-            {filteredJobs.length > PAGE_SIZE && (
-              <div className="load-more-bar">
-                <span className="field-hint tabular-nums">
-                  Menampilkan {displayedJobs.length} dari {filteredJobs.length} lowongan
-                </span>
+            {filteredJobs.length > PAGE_SIZE && remainingCount > 0 && (
+              <div className="show-more-teaser">
+                <div className="show-more-skeletons" aria-hidden="true">
+                  {[0, 1].map((slot) => (
+                    <div
+                      key={slot}
+                      className="surface show-more-skeleton-card"
+                    >
+                      <div className="job-card-top">
+                        <div className="company-row">
+                          <span className="teaser-block teaser-monogram" />
+                          <div className="teaser-stack">
+                            <span className="teaser-block teaser-company" />
+                            <span className="teaser-block teaser-loc" />
+                          </div>
+                        </div>
+                        <div className="teaser-match">
+                          <span className="teaser-block teaser-score" />
+                          <span className="teaser-block teaser-bar" />
+                        </div>
+                      </div>
+                      <span className="teaser-block teaser-title" />
+                      <div className="teaser-tokens">
+                        <span className="teaser-block teaser-chip" />
+                        <span className="teaser-block teaser-chip is-wide" />
+                        <span className="teaser-block teaser-chip" />
+                      </div>
+                      <div className="job-card-footer">
+                        <span className="teaser-block teaser-salary" />
+                        <span className="teaser-block teaser-cta" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-                <div className="workspace-actions">
-                  {remainingCount > 0 ? (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() =>
-                          setPagination({
-                            key: filterKey,
-                            count: visibleCount + PAGE_SIZE,
-                          })
-                        }
-                      >
-                        <ChevronDown size={14} aria-hidden="true" />
-                        Tampilkan Lebih Banyak (+{Math.min(PAGE_SIZE, remainingCount)})
-                      </button>
+                <div className="show-more-scrim" aria-hidden="true" />
 
-                      {remainingCount > PAGE_SIZE && (
+                <div className="show-more-overlay">
+                  <button
+                    type="button"
+                    className="btn btn-primary show-more-cta"
+                    onClick={() =>
+                      setPagination({
+                        key: filterKey,
+                        count: visibleCount + PAGE_SIZE,
+                      })
+                    }
+                  >
+                    <ChevronDown size={16} aria-hidden="true" />
+                    Tampilkan Lebih Banyak (+{Math.min(PAGE_SIZE, remainingCount)})
+                  </button>
+
+                  <div className="show-more-meta tabular-nums">
+                    <span>
+                      Menampilkan {displayedJobs.length} dari {filteredJobs.length} lowongan
+                    </span>
+                    {remainingCount > PAGE_SIZE && (
+                      <>
+                        <span aria-hidden="true">·</span>
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm"
+                          className="show-more-all-link"
                           onClick={() =>
                             setPagination({
                               key: filterKey,
@@ -473,23 +508,30 @@ export default function JobExplorer({
                             })
                           }
                         >
-                          Semua ({filteredJobs.length})
+                          Lihat Semua ({filteredJobs.length})
                         </button>
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() =>
-                        setPagination({ key: filterKey, count: PAGE_SIZE })
-                      }
-                    >
-                      <ChevronUp size={14} aria-hidden="true" />
-                      Ringkas ({PAGE_SIZE})
-                    </button>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {filteredJobs.length > PAGE_SIZE && remainingCount === 0 && (
+              <div className="load-more-bar is-centered">
+                <span className="field-hint tabular-nums">
+                  Semua {filteredJobs.length} lowongan ditampilkan
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() =>
+                    setPagination({ key: filterKey, count: PAGE_SIZE })
+                  }
+                >
+                  <ChevronUp size={14} aria-hidden="true" />
+                  Ringkas ({PAGE_SIZE})
+                </button>
               </div>
             )}
           </>
