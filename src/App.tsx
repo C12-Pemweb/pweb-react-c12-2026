@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Briefcase, Compass, Plus, Scale } from 'lucide-react';
+import {
+  Briefcase,
+  Compass,
+  Download,
+  Moon,
+  Plus,
+  Scale,
+  Sun,
+  Upload,
+} from 'lucide-react';
 import type { Application, ApplicationStatus } from './types/application';
 import { STATUS_LABELS } from './types/application';
 import type { JobListing } from './types/job';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { findInterviewConflicts, simulateBackdateDays } from './utils/ghosting';
 import { computePipelineStats } from './utils/stats';
-import { formatCompactDateTime, formatRupiah } from './utils/format';
+import { formatCompactDateTime, formatRupiah, getTodayYmd } from './utils/format';
 import {
   inferWorkMode,
   isDuplicateApplication,
@@ -23,6 +32,7 @@ import ApplicationForm from './components/ApplicationForm';
 import UndoToast from './components/UndoToast';
 
 type ActiveTab = 'explore' | 'pipeline' | 'compare';
+type ThemeMode = 'light' | 'dark';
 
 interface PendingUndo {
   application: Application;
@@ -60,15 +70,30 @@ export default function App() {
     [],
     normalizeStoredApplications,
   );
+  const [theme, setTheme] = useLocalStorage<ThemeMode>(
+    'theme',
+    'light',
+    (raw) => (raw === 'dark' ? 'dark' : 'light'),
+  );
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('explore');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
+  const [notice, setNotice] = useState<string | null>(null);
 
   const [pendingUndo, setPendingUndo] = useState<PendingUndo | null>(null);
   const [undoSecondsLeft, setUndoSecondsLeft] = useState(UNDO_DURATION_SECONDS);
+
   const undoTimeoutRef = useRef<number | null>(null);
   const undoIntervalRef = useRef<number | null>(null);
+  const noticeTimeoutRef = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 60_000);
@@ -83,8 +108,40 @@ export default function App() {
       if (undoIntervalRef.current !== null) {
         window.clearInterval(undoIntervalRef.current);
       }
+      if (noticeTimeoutRef.current !== null) {
+        window.clearTimeout(noticeTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Keyboard shortcut `/` untuk fokus search bar via useRef
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+      if (isFormOpen || selectedAppId !== null) return;
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (searchInputRef.current) {
+        event.preventDefault();
+        searchInputRef.current.focus();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFormOpen, selectedAppId]);
 
   const conflicts = useMemo(
     () => findInterviewConflicts(applications),
@@ -98,6 +155,17 @@ export default function App() {
     () => applications.find((app) => app.id === selectedAppId) ?? null,
     [applications, selectedAppId],
   );
+
+  function showNotice(message: string) {
+    if (noticeTimeoutRef.current !== null) {
+      window.clearTimeout(noticeTimeoutRef.current);
+    }
+    setNotice(message);
+    noticeTimeoutRef.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimeoutRef.current = null;
+    }, 3500);
+  }
 
   function clearUndoTimers() {
     if (undoTimeoutRef.current !== null) {
@@ -141,6 +209,7 @@ export default function App() {
     };
 
     handleAddApplication(nextApp);
+    showNotice(`"${job.company_name}" disimpan ke Wishlist.`);
   }
 
   function handleTransitionStatus(
@@ -250,7 +319,8 @@ export default function App() {
                 {
                   id: crypto.randomUUID(),
                   timestamp: logTime,
-                  message: 'Simulasi +15 hari dijalankan (lastUpdatedAt dimundurkan 15 hari)',
+                  message:
+                    'Simulasi +15 hari dijalankan (lastUpdatedAt dimundurkan 15 hari)',
                 },
                 ...app.activityLogs,
               ],
@@ -302,6 +372,61 @@ export default function App() {
     });
   }
 
+  function handleExportBackup() {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      kaptenSkills,
+      applications,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `aku-mw-magang-backup-${getTodayYmd()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showNotice('Backup JSON berhasil diekspor.');
+  }
+
+  async function handleImportBackup(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed: unknown = JSON.parse(text);
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Struktur JSON tidak dikenali.');
+      }
+
+      const data = parsed as Record<string, unknown>;
+      if (!Array.isArray(data.applications)) {
+        throw new Error('Field "applications" wajib berupa array.');
+      }
+
+      const importedApps = normalizeStoredApplications(data.applications);
+      const importedSkills = Array.isArray(data.kaptenSkills)
+        ? normalizeStoredSkills(data.kaptenSkills, kaptenSkills)
+        : kaptenSkills;
+
+      setApplications(importedApps);
+      setKaptenSkills(importedSkills);
+      setSelectedAppId(null);
+      setNowMs(Date.now());
+      showNotice(`Backup berhasil diimpor (${importedApps.length} lamaran).`);
+    } catch (err) {
+      showNotice(
+        err instanceof Error
+          ? `Gagal impor backup: ${err.message}`
+          : 'Gagal membaca file backup JSON.',
+      );
+    }
+  }
+
   return (
     <div className="app-shell">
       <header className="top-nav">
@@ -345,6 +470,53 @@ export default function App() {
           <div className="nav-actions">
             <button
               type="button"
+              className="nav-icon-btn"
+              onClick={handleExportBackup}
+              title="Ekspor backup data (JSON)"
+              aria-label="Ekspor backup JSON"
+            >
+              <Download size={15} aria-hidden="true" />
+            </button>
+
+            <button
+              type="button"
+              className="nav-icon-btn"
+              onClick={() => fileInputRef.current?.click()}
+              title="Impor backup data (JSON)"
+              aria-label="Impor backup JSON"
+            >
+              <Upload size={15} aria-hidden="true" />
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              className="sr-only"
+              onChange={(e) => {
+                void handleImportBackup(e);
+              }}
+              aria-label="Pilih file backup JSON"
+            />
+
+            <button
+              type="button"
+              className="nav-icon-btn"
+              onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+              title={theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'}
+              aria-label={
+                theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'
+              }
+            >
+              {theme === 'light' ? (
+                <Moon size={15} aria-hidden="true" />
+              ) : (
+                <Sun size={15} aria-hidden="true" />
+              )}
+            </button>
+
+            <button
+              type="button"
               className="btn btn-primary btn-sm"
               onClick={() => setIsFormOpen(true)}
             >
@@ -371,6 +543,7 @@ export default function App() {
             onSkillsChange={setKaptenSkills}
             applications={applications}
             onSaveToWishlist={handleSaveToWishlist}
+            searchInputRef={searchInputRef}
           />
         )}
 
@@ -384,6 +557,7 @@ export default function App() {
             onDeleteApplication={handleDeleteApplication}
             onOpenManualForm={() => setIsFormOpen(true)}
             onGoToExplorer={() => setActiveTab('explore')}
+            searchInputRef={searchInputRef}
           />
         )}
 
@@ -427,6 +601,12 @@ export default function App() {
           secondsLeft={undoSecondsLeft}
           onUndo={handleUndoDelete}
         />
+      )}
+
+      {notice && (
+        <div className="status-toast" role="status" aria-live="polite">
+          {notice}
+        </div>
       )}
     </div>
   );
