@@ -16,7 +16,11 @@ import {
 } from 'lucide-react';
 import type { Application, ApplicationStatus } from '../types/application';
 import { ALL_STATUSES, STATUS_LABELS } from '../types/application';
-import { getDaysSinceUpdate, isGhostingRisk } from '../utils/ghosting';
+import {
+  findInterviewConflicts,
+  getDaysSinceUpdate,
+  isGhostingRisk,
+} from '../utils/ghosting';
 import { calculateSkillMatch, getMatchTier } from '../utils/skillMatch';
 import {
   formatCompactDateTime,
@@ -53,6 +57,24 @@ export default function WarRoom({
   const [statusFilter, setStatusFilter] = useState<'ALL' | ApplicationStatus>('ALL');
   const [ghostOnly, setGhostOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('newest');
+
+  const conflictingIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const conflict of findInterviewConflicts(applications)) {
+      ids.add(conflict.a.id);
+      ids.add(conflict.b.id);
+    }
+    return ids;
+  }, [applications]);
+
+  const scheduledInterviews = useMemo(() => {
+    return applications
+      .filter((app) => app.status === 'INTERVIEW' && Boolean(app.interviewDateTime))
+      .sort((a, b) =>
+        new Date(a.interviewDateTime!).getTime() -
+        new Date(b.interviewDateTime!).getTime(),
+      );
+  }, [applications]);
 
   const visibleApplications = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -93,6 +115,39 @@ export default function WarRoom({
 
   return (
     <section className="warroom-section" aria-labelledby="warroom-heading">
+      {scheduledInterviews.length > 0 && (
+        <div className="agenda-strip" aria-label="Agenda interview terjadwal">
+          <div className="block-header">
+            <span className="block-title">
+              Agenda Interview Terjadwal ({scheduledInterviews.length})
+            </span>
+            <span className="field-hint">Klik jadwal untuk buka detail &amp; prep timer</span>
+          </div>
+          <div className="agenda-items">
+            {scheduledInterviews.map((app) => {
+              const isConflict = conflictingIds.has(app.id);
+              return (
+                <button
+                  key={app.id}
+                  type="button"
+                  className={`agenda-item ${isConflict ? 'is-conflict' : ''}`}
+                  onClick={() => onSelectApplication(app.id)}
+                >
+                  <Calendar size={14} aria-hidden="true" />
+                  <span className="mono tabular-nums">
+                    {formatCompactDateTime(app.interviewDateTime ?? '')}
+                  </span>
+                  <strong>{app.company}</strong>
+                  {isConflict && (
+                    <span className="field-error">Bentrok</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="board-head">
         <h2 id="warroom-heading" className="section-heading">
           Lamaran Saya{' '}
@@ -134,7 +189,7 @@ export default function WarRoom({
           <option value="offer">Urut: Offer Tertinggi</option>
         </select>
 
-        <label className={`toggle-chip ${ghostOnly ? 'is-active' : ''}`}>
+        <label className={`toggle-check ${ghostOnly ? 'is-active' : ''}`}>
           <input
             type="checkbox"
             checked={ghostOnly}
@@ -145,13 +200,13 @@ export default function WarRoom({
       </div>
 
       <div
-        className="category-pills"
+        className="filter-tabs"
         role="group"
         aria-label="Filter status lamaran"
       >
         <button
           type="button"
-          className={`pill-toggle ${statusFilter === 'ALL' ? 'is-selected' : ''}`}
+          className={`filter-tab ${statusFilter === 'ALL' ? 'is-selected' : ''}`}
           aria-pressed={statusFilter === 'ALL'}
           onClick={() => setStatusFilter('ALL')}
         >
@@ -163,7 +218,7 @@ export default function WarRoom({
             <button
               key={st}
               type="button"
-              className={`pill-toggle ${isSelected ? 'is-selected' : ''}`}
+              className={`filter-tab ${isSelected ? 'is-selected' : ''}`}
               aria-pressed={isSelected}
               onClick={() => setStatusFilter(st)}
             >
@@ -180,8 +235,8 @@ export default function WarRoom({
           </div>
           <h3>Pipeline lamaran masih kosong</h3>
           <p>
-            Simpan lowongan dari tab Eksplorasi Lowongan atau catat lamaran manual untuk
-            mulai melacak proses magang Kapten.
+            Simpan lowongan dari Eksplorasi atau catat lamaran manual untuk mulai melacak
+            proses magang Kapten.
           </p>
           <div className="state-box-actions">
             <button
@@ -250,29 +305,38 @@ export default function WarRoom({
                     </div>
                   </div>
 
-                  <div className="app-card-badges">
-                    <span className={`badge badge-${app.status.toLowerCase()}`}>
-                      <span className="badge-dot" aria-hidden="true" />
+                  <div className="app-card-right-meta">
+                    <span className={`status-stamp status-${app.status.toLowerCase()}`}>
                       {STATUS_LABELS[app.status]}
                     </span>
-                    <span className={`badge badge-${matchTier} tabular-nums`}>
-                      <span className="badge-dot" aria-hidden="true" />
-                      {match.score}% Match
-                    </span>
+
+                    <div
+                      className="match-readout"
+                      aria-label={`Kecocokan skill ${match.score} persen`}
+                    >
+                      <div className="match-number-line">
+                        <span className={`match-score-num is-${matchTier} tabular-nums`}>
+                          {match.score}%
+                        </span>
+                        <span className="match-score-unit">Match</span>
+                      </div>
+                      <div className="match-bar-track" aria-hidden="true">
+                        <div
+                          className={`match-bar-fill is-${matchTier}`}
+                          style={{ width: `${match.score}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="job-title">{app.role}</h3>
-                </div>
+                <h3 className="job-title">{app.role}</h3>
 
                 {ghostRisk && (
-                  <div>
-                    <span className="badge badge-danger tabular-nums">
-                      <AlertTriangle size={12} aria-hidden="true" />
-                      Rawan Ghosting ({daysSince} hari tanpa update)
-                    </span>
-                  </div>
+                  <p className="ghost-flag tabular-nums">
+                    <AlertTriangle size={14} aria-hidden="true" />
+                    Rawan Ghosting · {daysSince} hari tanpa update
+                  </p>
                 )}
 
                 <div className="app-meta-grid">

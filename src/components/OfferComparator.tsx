@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Award, Briefcase, Scale } from 'lucide-react';
+import { Briefcase, Scale } from 'lucide-react';
 import type { Application } from '../types/application';
 import { scoreOffer } from '../utils/offerCompare';
 import { formatRupiah } from '../utils/format';
@@ -154,14 +154,12 @@ export default function OfferComparator({
                 </div>
 
                 {isBest && (
-                  <span className="badge badge-offer">
-                    <Award size={13} aria-hidden="true" />
+                  <span className="status-stamp status-offer">
                     Rekomendasi Terbaik
                   </span>
                 )}
                 {winner === 'TIE' && (
-                  <span className="badge badge-accent">
-                    <span className="badge-dot" aria-hidden="true" />
+                  <span className="status-stamp status-interview">
                     Skor Seimbang
                   </span>
                 )}
