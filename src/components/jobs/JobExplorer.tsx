@@ -4,6 +4,8 @@ import {
   AlertCircle,
   BookmarkPlus,
   Check,
+  ChevronDown,
+  ChevronUp,
   Database,
   Globe,
   RefreshCw,
@@ -20,6 +22,8 @@ import { calculateSkillMatch, getMatchTier } from '../../utils/skillMatch';
 import { isFinalStatus } from '../../utils/stateMachine';
 import { getCompanyInitials } from '../../utils/format';
 import SkillProfile from './SkillProfile';
+
+const PAGE_SIZE = 6;
 
 interface JobExplorerProps {
   kaptenSkills: string[];
@@ -45,6 +49,10 @@ export default function JobExplorer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
+  const [pagination, setPagination] = useState<{ key: string; count: number }>({
+    key: '',
+    count: PAGE_SIZE,
+  });
 
   const debouncedKeyword = useDebounce(keyword, 400);
 
@@ -91,6 +99,8 @@ export default function JobExplorer({
   );
 
   const activeCategory = categories.includes(category) ? category : 'Semua';
+  const filterKey = `${useFallback ? 'local' : 'live'}:${activeCategory}:${debouncedKeyword.trim().toLowerCase()}`;
+  const visibleCount = pagination.key === filterKey ? pagination.count : PAGE_SIZE;
 
   const filteredJobs = useMemo(() => {
     const term = debouncedKeyword.trim().toLowerCase();
@@ -118,6 +128,9 @@ export default function JobExplorer({
       });
   }, [jobs, debouncedKeyword, activeCategory, kaptenSkills]);
 
+  const displayedJobs = filteredJobs.slice(0, visibleCount);
+  const remainingCount = Math.max(0, filteredJobs.length - displayedJobs.length);
+
   function handleSourceChange(nextFallback: boolean) {
     if (nextFallback === useFallback) return;
     setCategory('Semua');
@@ -140,14 +153,9 @@ export default function JobExplorer({
         <SkillProfile skills={kaptenSkills} onSkillsChange={onSkillsChange} />
 
         <section className="control-pane" aria-labelledby="source-heading">
-          <div>
-            <h2 id="source-heading" className="panel-heading">
-              Sumber Data Lowongan
-            </h2>
-            <p className="panel-desc">
-              Beralih antara Remotive Live API dan dataset magang tech lokal.
-            </p>
-          </div>
+          <h2 id="source-heading" className="panel-heading">
+            Sumber Data
+          </h2>
 
           <div
             className="source-options"
@@ -186,14 +194,16 @@ export default function JobExplorer({
       <section className="board-section" aria-labelledby="recommended-jobs-heading">
         <div className="board-head">
           <h2 id="recommended-jobs-heading" className="section-heading">
-            Lowongan Tersedia{' '}
+            Lowongan{' '}
             {!loading && !error && (
               <span className="section-count tabular-nums">
-                ({filteredJobs.length})
+                ({displayedJobs.length} / {filteredJobs.length})
               </span>
             )}
           </h2>
-          <span className="field-hint">Diurutkan dari kecocokan skill tertinggi</span>
+          {keyword !== debouncedKeyword && (
+            <span className="field-hint">Mencari...</span>
+          )}
         </div>
 
         <div className="toolbar">
@@ -231,26 +241,16 @@ export default function JobExplorer({
                   aria-pressed={isSelected}
                   onClick={() => setCategory(cat)}
                 >
-                  {cat === 'Semua' ? 'Semua Kategori' : cat}
+                  {cat === 'Semua' ? 'Semua' : cat}
                 </button>
               );
             })}
           </div>
         )}
 
-        {!loading && !error && (
-          <div className="toolbar-meta">
-            <span className="tabular-nums">
-              Menampilkan {filteredJobs.length} dari {jobs.length} lowongan ·{' '}
-              {useFallback ? 'Dataset Magang ID Lokal' : 'Remotive Live API'}
-            </span>
-            {keyword !== debouncedKeyword && <span>Mencari...</span>}
-          </div>
-        )}
-
         {loading && (
           <div className="job-grid" role="status" aria-label="Memuat daftar lowongan">
-            {[1, 2, 3, 4].map((item) => (
+            {[1, 2, 3, 4, 5, 6].map((item) => (
               <div key={item} className="surface skeleton-card">
                 <div className="skeleton-line is-short" />
                 <div className="skeleton-line is-title" />
@@ -305,11 +305,7 @@ export default function JobExplorer({
             <div className="state-box-icon">
               <SearchX size={20} aria-hidden="true" />
             </div>
-            <h3>Tidak ada lowongan yang cocok</h3>
-            <p>
-              Coba ubah kata kunci pencarian, pilih kategori lain, atau beralih sumber
-              data lowongan.
-            </p>
+            <h3>Tidak ada lowongan cocok</h3>
             {(keyword || activeCategory !== 'Semua') && (
               <div className="state-box-actions">
                 <button
@@ -320,129 +316,183 @@ export default function JobExplorer({
                     setCategory('Semua');
                   }}
                 >
-                  Reset Pencarian
+                  Reset Filter
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {!loading && !error && filteredJobs.length > 0 && (
-          <div className="job-grid">
-            {filteredJobs.map(({ job, match }) => {
-              const tier = getMatchTier(match.score);
-              const existingApp = findMatchingApplication(job);
-              const isLockedFinal = existingApp ? isFinalStatus(existingApp.status) : false;
+        {!loading && !error && displayedJobs.length > 0 && (
+          <>
+            <div className="job-grid">
+              {displayedJobs.map(({ job, match }) => {
+                const tier = getMatchTier(match.score);
+                const existingApp = findMatchingApplication(job);
+                const isLockedFinal = existingApp
+                  ? isFinalStatus(existingApp.status)
+                  : false;
 
-              return (
-                <article key={job.id} className="surface job-card">
-                  <div className="job-card-top">
-                    <div className="company-row">
-                      <div className="company-monogram" aria-hidden="true">
-                        {getCompanyInitials(job.company_name)}
+                return (
+                  <article key={job.id} className="surface job-card">
+                    <div className="job-card-top">
+                      <div className="company-row">
+                        <div className="company-monogram" aria-hidden="true">
+                          {getCompanyInitials(job.company_name)}
+                        </div>
+                        <div className="company-info">
+                          <p className="company-name">{job.company_name}</p>
+                          <p className="company-loc">
+                            {job.candidate_required_location} · {job.category}
+                          </p>
+                        </div>
                       </div>
-                      <div className="company-info">
-                        <p className="company-name">{job.company_name}</p>
-                        <p className="company-loc">
-                          {job.candidate_required_location} · {job.category}
-                        </p>
+
+                      <div
+                        className="match-readout"
+                        aria-label={`Kecocokan skill ${match.score} persen`}
+                      >
+                        <div className="match-number-line">
+                          <span className={`match-score-num is-${tier} tabular-nums`}>
+                            {match.score}%
+                          </span>
+                          <span className="match-score-unit">Match</span>
+                        </div>
+                        <div className="match-bar-track" aria-hidden="true">
+                          <div
+                            className={`match-bar-fill is-${tier}`}
+                            style={{ width: `${match.score}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div
-                      className="match-readout"
-                      aria-label={`Kecocokan skill ${match.score} persen`}
-                    >
-                      <div className="match-number-line">
-                        <span className={`match-score-num is-${tier} tabular-nums`}>
-                          {match.score}%
-                        </span>
-                        <span className="match-score-unit">Match</span>
-                      </div>
-                      <div className="match-bar-track" aria-hidden="true">
-                        <div
-                          className={`match-bar-fill is-${tier}`}
-                          style={{ width: `${match.score}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                    <h3 className="job-title">{job.title}</h3>
 
-                  <h3 className="job-title">{job.title}</h3>
+                    {job.tags.length > 0 && (
+                      <div className="skill-token-list" aria-label="Skill dibutuhkan">
+                        {match.matchedSkills.map((skill) => (
+                          <span
+                            key={`m-${skill}`}
+                            className="skill-token is-matched"
+                            title="Skill cocok"
+                          >
+                            <Check size={12} aria-hidden="true" />
+                            {skill}
+                          </span>
+                        ))}
+                        {match.missingSkills.slice(0, 6).map((skill) => (
+                          <span
+                            key={`x-${skill}`}
+                            className="skill-token is-missing"
+                            title="Missing skill"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {match.missingSkills.length > 6 && (
+                          <span
+                            className="skill-token is-missing tabular-nums"
+                            title={match.missingSkills.slice(6).join(', ')}
+                          >
+                            +{match.missingSkills.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
-                  {job.tags.length > 0 ? (
-                    <div className="skill-token-list" aria-label="Skill yang dibutuhkan">
-                      {match.matchedSkills.map((skill) => (
-                        <span
-                          key={`m-${skill}`}
-                          className="skill-token is-matched"
-                          title="Skill cocok"
+                    <div className="job-card-footer">
+                      <span className="job-salary tabular-nums">{job.salary}</span>
+
+                      {!existingApp ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => onSaveToWishlist(job)}
                         >
-                          <Check size={12} aria-hidden="true" />
-                          {skill}
-                        </span>
-                      ))}
-                      {match.missingSkills.slice(0, 7).map((skill) => (
-                        <span
-                          key={`x-${skill}`}
-                          className="skill-token is-missing"
-                          title="Missing skill"
+                          <BookmarkPlus size={14} aria-hidden="true" />
+                          Simpan ke Wishlist
+                        </button>
+                      ) : isLockedFinal ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          disabled
                         >
-                          {skill}
-                        </span>
-                      ))}
-                      {match.missingSkills.length > 7 && (
-                        <span
-                          className="skill-token is-missing tabular-nums"
-                          title={match.missingSkills.slice(7).join(', ')}
+                          <Check size={14} aria-hidden="true" />
+                          Selesai ({STATUS_LABELS[existingApp.status]})
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-cancel-toggle btn-sm"
+                          onClick={() => onCancelApplication?.(existingApp.id)}
+                          title="Klik untuk membatalkan lamaran ini"
                         >
-                          +{match.missingSkills.length - 7} lainnya
-                        </span>
+                          <X size={14} aria-hidden="true" />
+                          Batalkan Lamaran
+                        </button>
                       )}
                     </div>
-                  ) : (
-                    <p className="field-hint">
-                      Tidak ada tag skill spesifik pada lowongan ini.
-                    </p>
-                  )}
+                  </article>
+                );
+              })}
+            </div>
 
-                  <div className="job-card-footer">
-                    <span className="job-salary tabular-nums">{job.salary}</span>
+            {filteredJobs.length > PAGE_SIZE && (
+              <div className="load-more-bar">
+                <span className="field-hint tabular-nums">
+                  Menampilkan {displayedJobs.length} dari {filteredJobs.length} lowongan
+                </span>
 
-                    {!existingApp ? (
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={() => onSaveToWishlist(job)}
-                      >
-                        <BookmarkPlus size={14} aria-hidden="true" />
-                        Simpan ke Wishlist
-                      </button>
-                    ) : isLockedFinal ? (
+                <div className="workspace-actions">
+                  {remainingCount > 0 ? (
+                    <>
                       <button
                         type="button"
                         className="btn btn-secondary btn-sm"
-                        disabled
+                        onClick={() =>
+                          setPagination({
+                            key: filterKey,
+                            count: visibleCount + PAGE_SIZE,
+                          })
+                        }
                       >
-                        <Check size={14} aria-hidden="true" />
-                        Selesai ({STATUS_LABELS[existingApp.status]})
+                        <ChevronDown size={14} aria-hidden="true" />
+                        Tampilkan Lebih Banyak (+{Math.min(PAGE_SIZE, remainingCount)})
                       </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn-cancel-toggle btn-sm"
-                        onClick={() => onCancelApplication?.(existingApp.id)}
-                        title="Klik untuk membatalkan lamaran ini (bisa di-Undo 5 detik)"
-                      >
-                        <X size={14} aria-hidden="true" />
-                        Batalkan Lamaran
-                      </button>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+
+                      {remainingCount > PAGE_SIZE && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() =>
+                            setPagination({
+                              key: filterKey,
+                              count: filteredJobs.length,
+                            })
+                          }
+                        >
+                          Semua ({filteredJobs.length})
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() =>
+                        setPagination({ key: filterKey, count: PAGE_SIZE })
+                      }
+                    >
+                      <ChevronUp size={14} aria-hidden="true" />
+                      Ringkas ({PAGE_SIZE})
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

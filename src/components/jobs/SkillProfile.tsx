@@ -15,13 +15,13 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
     const trimmed = newSkill.trim();
 
     if (!trimmed) {
-      setError('Masukkan nama skill terlebih dahulu.');
+      setError('Masukkan nama skill.');
       return;
     }
 
     const exists = skills.some((s) => s.toLowerCase() === trimmed.toLowerCase());
     if (exists) {
-      setError(`Skill "${trimmed}" sudah ada di profil.`);
+      setError(`Skill "${trimmed}" sudah ada.`);
       return;
     }
 
@@ -40,14 +40,9 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
       className="control-pane is-cream"
       aria-labelledby="skill-profile-heading"
     >
-      <div>
-        <h2 id="skill-profile-heading" className="panel-heading">
-          Profil Skill Kapten ({skills.length})
-        </h2>
-        <p className="panel-desc">
-          Menghitung persentase kecocokan setiap lowongan secara langsung.
-        </p>
-      </div>
+      <h2 id="skill-profile-heading" className="panel-heading">
+        Skill Kapten ({skills.length})
+      </h2>
 
       <form className="skill-add-row" onSubmit={handleAddSkill}>
         <label htmlFor="kapten-skill-input" className="sr-only">
@@ -61,7 +56,7 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
             setNewSkill(e.target.value);
             if (error) setError('');
           }}
-          placeholder="Tambah skill, misal Docker, Go, Figma..."
+          placeholder="Tambah skill (Docker, Go, Figma)..."
         />
         <button type="submit" className="btn btn-primary btn-sm" style={{ height: 40 }}>
           <Plus size={15} aria-hidden="true" />
@@ -75,11 +70,7 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
         </p>
       )}
 
-      {skills.length === 0 ? (
-        <p className="panel-desc">
-          Belum ada skill. Tambahkan skill agar kecocokan lowongan bisa dihitung.
-        </p>
-      ) : (
+      {skills.length > 0 && (
         <ul className="skill-chip-list" aria-label="Daftar skill Kapten">
           {skills.map((skill) => (
             <li key={skill} className="skill-chip">
