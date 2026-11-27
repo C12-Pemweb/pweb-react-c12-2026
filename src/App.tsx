@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Briefcase, Compass, Plus, Scale } from 'lucide-react';
-import type { Application } from './types/application';
+import type { Application, ApplicationStatus } from './types/application';
+import { STATUS_LABELS } from './types/application';
 import type { JobListing } from './types/job';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { findInterviewConflicts, simulateBackdateDays } from './utils/ghosting';
 import { computePipelineStats } from './utils/stats';
+import { formatCompactDateTime, formatRupiah } from './utils/format';
 import {
   inferWorkMode,
   isDuplicateApplication,
@@ -15,12 +17,30 @@ import ConflictBanner from './components/ConflictBanner';
 import StatsDashboard from './components/StatsDashboard';
 import JobExplorer from './components/jobs/JobExplorer';
 import WarRoom from './components/WarRoom';
+import ApplicationDetail from './components/ApplicationDetail';
 import OfferComparator from './components/OfferComparator';
 import ApplicationForm from './components/ApplicationForm';
 
 type ActiveTab = 'explore' | 'pipeline' | 'compare';
 
 const DEFAULT_SKILLS = ['React', 'TypeScript', 'CSS'];
+
+function describeTransition(
+  from: ApplicationStatus,
+  to: ApplicationStatus,
+  patch: Partial<Application>,
+): string {
+  if (to === 'APPLIED') {
+    return `Status ${STATUS_LABELS[from]} -> Applied (CV: ${patch.cvVersion ?? '-'}, tanggal ${patch.appliedDate ?? '-'})`;
+  }
+  if (to === 'INTERVIEW') {
+    return `Status ${STATUS_LABELS[from]} -> Interview (jadwal ${formatCompactDateTime(patch.interviewDateTime ?? '')})`;
+  }
+  if (to === 'OFFER') {
+    return `Status ${STATUS_LABELS[from]} -> Offer (${formatRupiah(patch.salaryOffer ?? 0)}, ${patch.workMode ?? '-'})`;
+  }
+  return `Status ${STATUS_LABELS[from]} -> ${STATUS_LABELS[to]}`;
+}
 
 export default function App() {
   const [kaptenSkills, setKaptenSkills] = useLocalStorage<string[]>(
@@ -50,6 +70,10 @@ export default function App() {
   const stats = useMemo(
     () => computePipelineStats(applications, nowMs),
     [applications, nowMs],
+  );
+  const selectedApplication = useMemo(
+    () => applications.find((app) => app.id === selectedAppId) ?? null,
+    [applications, selectedAppId],
   );
 
   function handleAddApplication(newApp: Application) {
@@ -83,6 +107,100 @@ export default function App() {
     };
 
     handleAddApplication(nextApp);
+  }
+
+  function handleTransitionStatus(
+    id: string,
+    nextStatus: ApplicationStatus,
+    patch: Partial<Application>,
+  ) {
+    const now = new Date().toISOString();
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id !== id
+          ? app
+          : {
+              ...app,
+              ...patch,
+              status: nextStatus,
+              lastUpdatedAt: now,
+              activityLogs: [
+                {
+                  id: crypto.randomUUID(),
+                  timestamp: now,
+                  message: describeTransition(app.status, nextStatus, patch),
+                },
+                ...app.activityLogs,
+              ],
+            },
+      ),
+    );
+    setNowMs(Date.now());
+  }
+
+  function handleAddChecklistItem(id: string, text: string) {
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id !== id
+          ? app
+          : {
+              ...app,
+              checklist: [
+                ...app.checklist,
+                { id: crypto.randomUUID(), text, done: false },
+              ],
+            },
+      ),
+    );
+  }
+
+  function handleToggleChecklistItem(id: string, itemId: string) {
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id !== id
+          ? app
+          : {
+              ...app,
+              checklist: app.checklist.map((item) =>
+                item.id !== itemId ? item : { ...item, done: !item.done },
+              ),
+            },
+      ),
+    );
+  }
+
+  function handleRemoveChecklistItem(id: string, itemId: string) {
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id !== id
+          ? app
+          : {
+              ...app,
+              checklist: app.checklist.filter((item) => item.id !== itemId),
+            },
+      ),
+    );
+  }
+
+  function handleAddManualLog(id: string, message: string) {
+    const now = new Date().toISOString();
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id !== id
+          ? app
+          : {
+              ...app,
+              activityLogs: [
+                {
+                  id: crypto.randomUUID(),
+                  timestamp: now,
+                  message: `Catatan: ${message}`,
+                },
+                ...app.activityLogs,
+              ],
+            },
+      ),
+    );
   }
 
   function handleSimulateGhosting(id: string) {
@@ -213,6 +331,22 @@ export default function App() {
           applications={applications}
           onAdd={handleAddApplication}
           onClose={() => setIsFormOpen(false)}
+        />
+      )}
+
+      {selectedApplication && (
+        <ApplicationDetail
+          key={selectedApplication.id}
+          application={selectedApplication}
+          nowMs={nowMs}
+          onTransitionStatus={handleTransitionStatus}
+          onAddChecklistItem={handleAddChecklistItem}
+          onToggleChecklistItem={handleToggleChecklistItem}
+          onRemoveChecklistItem={handleRemoveChecklistItem}
+          onAddManualLog={handleAddManualLog}
+          onSimulateGhosting={handleSimulateGhosting}
+          onDelete={handleDeleteApplication}
+          onClose={() => setSelectedAppId(null)}
         />
       )}
     </div>
