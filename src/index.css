@@ -657,7 +657,7 @@ img {
 }
 
 .hero-cream-block {
-  background-color: #fcebd2;
+  background-color: #f6e6cd;
   color: #0d0e0c;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 170px auto;
