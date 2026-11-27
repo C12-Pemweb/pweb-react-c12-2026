@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import type { Application, ApplicationStatus } from '../types/application';
 import { ALL_STATUSES } from '../types/application';
 import { getValidTargets, validateTransition } from '../utils/stateMachine';
-import { findConflicts, isGhostingRisk } from '../utils/ghosting';
-import { skillMatchPercent } from '../utils/validation';
+import { findInterviewConflicts, isGhostingRisk } from '../utils/ghosting';
+import { calculateSkillMatch } from '../utils/skillMatch';
 
 interface Props {
   applications: Application[];
@@ -21,7 +21,7 @@ export default function WarRoom({ applications, setApplications, ownedSkills }: 
   const now = Date.now() + dayOffset * 86400000;
 
   // Konflik dihitung dari SEMUA data (tidak terpengaruh filter)
-  const conflicts = useMemo(() => findConflicts(applications), [applications]);
+  const conflicts = useMemo(() => findInterviewConflicts(applications), [applications]);
 
   const visible = useMemo(() => {
     let list = applications.filter(a =>
@@ -53,8 +53,8 @@ export default function WarRoom({ applications, setApplications, ownedSkills }: 
     if (err) { alert(err); return; }
     const ts = new Date().toISOString();
     setApplications(prev => prev.map(a => a.id !== app.id ? a : {
-      ...a, ...patch, status: to, lastStatusChange: ts,
-      activityLog: [...a.activityLog, { id: crypto.randomUUID(), timestamp: ts, message: `Status ${a.status} → ${to}` }],
+      ...a, ...patch, status: to, lastUpdatedAt: ts,
+      activityLogs: [...a.activityLogs, { id: crypto.randomUUID(), timestamp: ts, message: `Status ${a.status} → ${to}` }],
     }));
   };
 
@@ -64,7 +64,7 @@ export default function WarRoom({ applications, setApplications, ownedSkills }: 
       {conflicts.length > 0 && (
         <div className="conflict-banner" role="alert">
           ⚠ Bentrok jadwal interview:{' '}
-          {conflicts.map(([a, b]) => `${a.company} vs ${b.company}`).join('; ')}
+          {conflicts.map(({ a, b }) => `${a.company} vs ${b.company}`).join('; ')}
         </div>
       )}
       <div className="toolbar">
@@ -94,7 +94,7 @@ export default function WarRoom({ applications, setApplications, ownedSkills }: 
               {isGhostingRisk(a, now) && <span className="ghost-badge">👻 Rawan Ghosting</span>}
               <p>CV: {a.cvVersion ?? '-'} · {a.workMode}</p>
               <p>Checklist: {done}/{a.checklist.length}</p>
-              <p>Skill Match: {skillMatchPercent(a.requiredSkills, ownedSkills)}%</p>
+              <p>Skill Match: {calculateSkillMatch(a.requiredSkills, ownedSkills).score}%</p>
               {a.interviewDateTime && <p>Interview: {new Date(a.interviewDateTime).toLocaleString()}</p>}
               {a.salaryOffer ? <p>Offer: Rp {a.salaryOffer.toLocaleString('id-ID')}</p> : null}
               {targets.length > 0 ? (

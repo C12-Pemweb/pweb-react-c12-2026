@@ -26,7 +26,7 @@ export default function OfferComparator({ applications, ownedSkills }: Props) {
         <h3>{app.company} — {app.role}</h3>
         <p>Gaji: Rp {(app.salaryOffer ?? 0).toLocaleString('id-ID')}</p>
         <p>Mode kerja: {app.workMode}</p>
-        <p>Skill Match: {s.skill}%</p>
+        <p>Skill Match: {s.skillMatch}%</p>
         <p><strong>Skor: {s.total.toFixed(1)}</strong></p>
       </>) : <p className="empty">Pilih offer {label}</p>}
     </div>

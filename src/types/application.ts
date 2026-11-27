@@ -1,10 +1,25 @@
 export type ApplicationStatus =
-  | 'WISHLIST' | 'APPLIED' | 'SCREENING' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'GHOSTED';
+  | 'WISHLIST'
+  | 'APPLIED'
+  | 'SCREENING'
+  | 'INTERVIEW'
+  | 'OFFER'
+  | 'REJECTED'
+  | 'GHOSTED';
+
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite';
 
-// Minimal; Orang 3 boleh memperluas
-export interface ChecklistItem { id: string; text: string; done: boolean }
-export interface ActivityLog { id: string; timestamp: string; message: string }
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface ActivityLog {
+  id: string;
+  timestamp: string;
+  message: string;
+}
 
 export interface Application {
   id: string;
@@ -18,11 +33,37 @@ export interface Application {
   interviewDateTime?: string;
   salaryOffer?: number;
   createdAt: string;
-  lastStatusChange: string;
+  lastUpdatedAt: string;
   checklist: ChecklistItem[];
-  activityLog: ActivityLog[];
+  activityLogs: ActivityLog[];
 }
 
-export const ALL_STATUSES: ApplicationStatus[] =
-  ['WISHLIST', 'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'REJECTED', 'GHOSTED'];
-export const WORK_MODES: WorkMode[] = ['Remote', 'Hybrid', 'Onsite'];
+export const ALL_STATUSES: readonly ApplicationStatus[] = [
+  'WISHLIST',
+  'APPLIED',
+  'SCREENING',
+  'INTERVIEW',
+  'OFFER',
+  'REJECTED',
+  'GHOSTED',
+];
+
+export const PIPELINE_STEPS: readonly ApplicationStatus[] = [
+  'WISHLIST',
+  'APPLIED',
+  'SCREENING',
+  'INTERVIEW',
+  'OFFER',
+];
+
+export const WORK_MODES: readonly WorkMode[] = ['Remote', 'Hybrid', 'Onsite'];
+
+export const STATUS_LABELS: Record<ApplicationStatus, string> = {
+  WISHLIST: 'Wishlist',
+  APPLIED: 'Applied',
+  SCREENING: 'Screening',
+  INTERVIEW: 'Interview',
+  OFFER: 'Offer',
+  REJECTED: 'Rejected',
+  GHOSTED: 'Ghosted',
+};
