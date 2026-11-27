@@ -77,7 +77,12 @@ export function dataUrlToBlobUrl(dataUrl: string): string | null {
 }
 
 function escapePdfText(text: string): string {
-  return text.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  return text
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
 }
 
 /** Builds a minimal valid 1-page PDF data URL so demo CVs render live in preview. */
