@@ -657,7 +657,7 @@ img {
 }
 
 .hero-cream-block {
-  background-color: #f6e6cd;
+  background-color: #f5e5cc;
   color: #0d0e0c;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 170px auto;
@@ -710,6 +710,20 @@ img {
   height: 210px;
   object-fit: cover;
   object-position: top center;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
 }
 
 .hero-cream-action {
@@ -2452,6 +2466,17 @@ img {
 }
 
 @media (max-width: 720px) {
+  .top-nav-link {
+    padding: 0 0.3rem;
+    font-size: 0.77rem;
+    gap: 0.2rem;
+  }
+
+  .top-nav-link.is-active::after {
+    left: 0.3rem;
+    right: 0.3rem;
+  }
+
   .app-main,
   .landing-section {
     padding: 1.25rem 1rem 3rem;
