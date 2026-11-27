@@ -1,89 +1,98 @@
-import { useState } from "react";
-import "./jobs.css";
+import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 
-interface SkillProfileProps{
-    skills: string[];
-    onSkillsChange: (skills: string[]) => void;
+interface SkillProfileProps {
+  skills: string[];
+  onSkillsChange: (skills: string[]) => void;
 }
 
-function SkillProfile({ skills, onSkillsChange }: SkillProfileProps) {
-  const [newSkill, setNewSkill] = useState("");
-  const [error, setError] = useState("");
+export default function SkillProfile({ skills, onSkillsChange }: SkillProfileProps) {
+  const [newSkill, setNewSkill] = useState('');
+  const [error, setError] = useState('');
 
-  function handleAddSkill() {
-    const trimmedSkill = newSkill.trim();
+  function handleAddSkill(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = newSkill.trim();
 
-    if (!trimmedSkill) {
-      setError("Skill tidak boleh kosong.");
+    if (!trimmed) {
+      setError('Masukkan nama skill terlebih dahulu.');
       return;
     }
 
-    const alreadyExists = skills.some(
-      (skill) => skill.toLowerCase() === trimmedSkill.toLowerCase()
-    );
-
-    if (alreadyExists) {
-      setError("Skill sudah ada.");
+    const exists = skills.some((s) => s.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      setError(`Skill "${trimmed}" sudah ada di profil.`);
       return;
     }
 
-    onSkillsChange([...skills, trimmedSkill]);
-    setNewSkill("");
-    setError("");
+    onSkillsChange([...skills, trimmed]);
+    setNewSkill('');
+    setError('');
   }
 
   function handleRemoveSkill(skillToRemove: string) {
-    if (skills.length <= 3) {
-      setError("Minimal harus memiliki 3 skill.");
-      return;
-    }
-
-    onSkillsChange(skills.filter((skill) => skill !== skillToRemove));
-    setError("");
+    onSkillsChange(skills.filter((s) => s !== skillToRemove));
+    setError('');
   }
 
   return (
-    <section className="skill-profile">
-      <h2 className="section-title">Skill Profile Captain</h2>
-      <p>Tambahkan skill yang kamu kuasai (minimal 3 skill).</p>
+    <section className="surface sidebar-panel" aria-labelledby="skill-profile-heading">
+      <div>
+        <h2 id="skill-profile-heading" className="panel-heading">
+          Profil Skill Kapten
+        </h2>
+        <p className="panel-desc">
+          Digunakan untuk menghitung persentase kecocokan tiap lowongan secara langsung.
+        </p>
+      </div>
 
-      <form
-        className ="skill-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleAddSkill();
-        }}
-      >
+      <form className="skill-add-row" onSubmit={handleAddSkill}>
+        <label htmlFor="kapten-skill-input" className="sr-only">
+          Tambah skill baru
+        </label>
         <input
-          className="skill-input"
+          id="kapten-skill-input"
+          className={`input ${error ? 'is-invalid' : ''}`}
           value={newSkill}
-          onChange={(event) => setNewSkill(event.target.value)}
-          placeholder="Contoh: JavaScript"
+          onChange={(e) => {
+            setNewSkill(e.target.value);
+            if (error) setError('');
+          }}
+          placeholder="Tambah skill, misal Docker..."
         />
-
-        <button className="btn btn-primary" type="submit">Tambah Skill</button>
+        <button type="submit" className="btn btn-primary btn-sm" style={{ height: 38 }}>
+          <Plus size={15} aria-hidden="true" />
+          Tambah
+        </button>
       </form>
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
 
-      <ul className="skill-list">
-        {skills.map((skill) => (
-          <li className="skill-chip" key={skill}>
-            {skill}
-            <button
-              className="skill-remove"
-              type="button"
-              onClick={() => handleRemoveSkill(skill)}
-            >
-              Hapus
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <p>Total skill: {skills.length}</p>
+      {skills.length === 0 ? (
+        <p className="panel-desc">
+          Belum ada skill. Tambahkan skill agar Match Score dapat dihitung.
+        </p>
+      ) : (
+        <ul className="skill-chip-list" aria-label="Daftar skill Kapten">
+          {skills.map((skill) => (
+            <li key={skill} className="skill-chip">
+              <span>{skill}</span>
+              <button
+                type="button"
+                className="skill-chip-remove"
+                onClick={() => handleRemoveSkill(skill)}
+                aria-label={`Hapus skill ${skill}`}
+              >
+                <X size={13} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
-
-export default SkillProfile;

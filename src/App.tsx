@@ -1,56 +1,75 @@
-import { useState } from "react";
-import type { JobListing } from "./types/job";
-import JobExplorer from "./components/jobs/JobExplorer";
-import SkillProfile from "./components/jobs/SkillProfile";
+import type { Application } from './types/application';
+import type { JobListing } from './types/job';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import {
+  inferWorkMode,
+  isDuplicateApplication,
+  normalizeStoredApplications,
+  normalizeStoredSkills,
+} from './utils/validation';
+import JobExplorer from './components/jobs/JobExplorer';
 
-function App(){
-  const [captainSkills, setCaptainSkills] = useState<string[]>([
-    "HTML", "CSS", "JavaScript"
-  ]);
-  const [wishlist, setWishlist] = useState<JobListing[]>([]);
+const DEFAULT_SKILLS = ['React', 'TypeScript', 'CSS'];
+
+export default function App() {
+  const [kaptenSkills, setKaptenSkills] = useLocalStorage<string[]>(
+    'kaptenSkills',
+    DEFAULT_SKILLS,
+    (raw) => normalizeStoredSkills(raw, DEFAULT_SKILLS),
+  );
+  const [applications, setApplications] = useLocalStorage<Application[]>(
+    'applications',
+    [],
+    normalizeStoredApplications,
+  );
 
   function handleSaveToWishlist(job: JobListing) {
-    const alreadySaved = wishlist.some(
-      (savedJob) => savedJob.id === job.id
-    );
+    if (isDuplicateApplication(applications, job.company_name, job.title)) {
+      return;
+    }
 
-    if (alreadySaved) return;
+    const now = new Date().toISOString();
+    const nextApp: Application = {
+      id: crypto.randomUUID(),
+      company: job.company_name,
+      role: job.title,
+      workMode: inferWorkMode(job.candidate_required_location),
+      status: 'WISHLIST',
+      requiredSkills: job.tags,
+      createdAt: now,
+      lastUpdatedAt: now,
+      checklist: [],
+      activityLogs: [
+        {
+          id: crypto.randomUUID(),
+          timestamp: now,
+          message: 'Disimpan ke Wishlist dari Eksplorasi Lowongan',
+        },
+      ],
+    };
 
-    setWishlist((current) => [...current, job]);
+    setApplications((prev) => [nextApp, ...prev]);
   }
 
   return (
-    <main>
-      <h1>Aku Mw Magang</h1>
+    <div className="app-shell">
+      <header className="top-nav">
+        <div className="top-nav-inner">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true">AM</span>
+            <span>Aku Mw Magang</span>
+          </div>
+        </div>
+      </header>
 
-      <SkillProfile
-        skills={captainSkills}
-        onSkillsChange={setCaptainSkills}
-      />
-
-      <hr />
-
-      <JobExplorer
-        captainSkills={captainSkills}
-        savedJobIds={wishlist.map((job) => job.id)}
-        onSaveToWishlist={handleSaveToWishlist}
-      />
-
-      <hr />
-
-      <section>
-        <h2>Wishlist</h2>
-        <p>Total lowongan tersimpan: {wishlist.length}</p>
-
-        {wishlist.map((job) => (
-          <article key={job.id}>
-            <h3>{job.title}</h3>
-            <p>{job.company_name}</p>
-          </article>
-        ))}
-      </section>
-    </main>
+      <main className="app-main">
+        <JobExplorer
+          kaptenSkills={kaptenSkills}
+          onSkillsChange={setKaptenSkills}
+          applications={applications}
+          onSaveToWishlist={handleSaveToWishlist}
+        />
+      </main>
+    </div>
   );
 }
-
-export default App;
