@@ -450,7 +450,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <aside className="side-rail" aria-label="Navigasi aplikasi">
-        <div className="rail-top">
+        <div className="rail-brand-wrap">
           <div className="brand-link">
             <span className="brand-mark" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
@@ -461,41 +461,41 @@ export default function App() {
             </span>
             <span className="brand-label-mobile">Aku Mw Magang</span>
           </div>
-
-          <nav className="rail-nav" aria-label="Navigasi utama">
-            <button
-              type="button"
-              className={`rail-btn ${activeTab === 'explore' ? 'is-active' : ''}`}
-              onClick={() => setActiveTab('explore')}
-              aria-current={activeTab === 'explore' ? 'page' : undefined}
-            >
-              <Compass size={19} aria-hidden="true" />
-              <span>Eksplorasi</span>
-            </button>
-
-            <button
-              type="button"
-              className={`rail-btn ${activeTab === 'pipeline' ? 'is-active' : ''}`}
-              onClick={() => setActiveTab('pipeline')}
-              aria-current={activeTab === 'pipeline' ? 'page' : undefined}
-            >
-              <Briefcase size={19} aria-hidden="true" />
-              <span>Pipeline</span>
-              <span className="rail-badge tabular-nums">{applications.length}</span>
-            </button>
-
-            <button
-              type="button"
-              className={`rail-btn ${activeTab === 'compare' ? 'is-active' : ''}`}
-              onClick={() => setActiveTab('compare')}
-              aria-current={activeTab === 'compare' ? 'page' : undefined}
-            >
-              <Scale size={19} aria-hidden="true" />
-              <span>Offer</span>
-              <span className="rail-badge tabular-nums">{stats.offerCount}</span>
-            </button>
-          </nav>
         </div>
+
+        <nav className="rail-nav" aria-label="Navigasi utama">
+          <button
+            type="button"
+            className={`rail-btn ${activeTab === 'explore' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('explore')}
+            aria-current={activeTab === 'explore' ? 'page' : undefined}
+          >
+            <Compass size={19} aria-hidden="true" />
+            <span>Eksplorasi</span>
+          </button>
+
+          <button
+            type="button"
+            className={`rail-btn ${activeTab === 'pipeline' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('pipeline')}
+            aria-current={activeTab === 'pipeline' ? 'page' : undefined}
+          >
+            <Briefcase size={19} aria-hidden="true" />
+            <span>Pipeline</span>
+            <span className="rail-badge tabular-nums">{applications.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`rail-btn ${activeTab === 'compare' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('compare')}
+            aria-current={activeTab === 'compare' ? 'page' : undefined}
+          >
+            <Scale size={19} aria-hidden="true" />
+            <span>Offer</span>
+            <span className="rail-badge tabular-nums">{stats.offerCount}</span>
+          </button>
+        </nav>
 
         <div className="rail-bottom">
           <button

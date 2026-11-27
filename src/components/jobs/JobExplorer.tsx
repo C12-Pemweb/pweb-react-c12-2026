@@ -373,7 +373,7 @@ export default function JobExplorer({
                           {skill}
                         </span>
                       ))}
-                      {match.missingSkills.map((skill) => (
+                      {match.missingSkills.slice(0, 7).map((skill) => (
                         <span
                           key={`x-${skill}`}
                           className="skill-tag is-missing"
@@ -382,6 +382,14 @@ export default function JobExplorer({
                           {skill}
                         </span>
                       ))}
+                      {match.missingSkills.length > 7 && (
+                        <span
+                          className="category-tag tabular-nums"
+                          title={match.missingSkills.slice(7).join(', ')}
+                        >
+                          +{match.missingSkills.length - 7} lainnya
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <p className="field-hint">
