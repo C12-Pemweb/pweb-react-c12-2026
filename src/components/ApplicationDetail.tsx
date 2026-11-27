@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
   Check,
   Clock,
+  Download,
+  ListChecks,
   Lock,
   Plus,
   Send,
   Trash2,
+  Upload,
   X,
 } from 'lucide-react';
 import type {
@@ -20,6 +23,7 @@ import {
   STATUS_LABELS,
   WORK_MODES,
 } from '../types/application';
+import type { CvDocument } from '../types/cv';
 import {
   getValidTargets,
   isFinalStatus,
@@ -38,12 +42,15 @@ import InterviewPrepTimer from './InterviewPrepTimer';
 interface ApplicationDetailProps {
   application: Application;
   nowMs: number;
+  cvDocuments?: CvDocument[];
+  onUploadCvFiles?: (files: FileList) => Promise<CvDocument[]>;
   onTransitionStatus: (
     id: string,
     nextStatus: ApplicationStatus,
     patch: Partial<Application>,
   ) => void;
   onAddChecklistItem: (id: string, text: string) => void;
+  onApplyChecklistTemplate?: (id: string) => void;
   onToggleChecklistItem: (id: string, itemId: string) => void;
   onRemoveChecklistItem: (id: string, itemId: string) => void;
   onAddManualLog: (id: string, message: string) => void;
@@ -55,8 +62,11 @@ interface ApplicationDetailProps {
 export default function ApplicationDetail({
   application,
   nowMs,
+  cvDocuments = [],
+  onUploadCvFiles,
   onTransitionStatus,
   onAddChecklistItem,
+  onApplyChecklistTemplate,
   onToggleChecklistItem,
   onRemoveChecklistItem,
   onAddManualLog,
@@ -65,10 +75,15 @@ export default function ApplicationDetail({
   onClose,
 }: ApplicationDetailProps) {
   const validTargets = getValidTargets(application.status);
+  const defaultCvName =
+    cvDocuments.find((c) => c.isDefault)?.name ?? cvDocuments[0]?.name ?? '';
+
   const [selectedTarget, setSelectedTarget] = useState<ApplicationStatus | null>(
     validTargets[0] ?? null,
   );
-  const [cvVersion, setCvVersion] = useState(application.cvVersion ?? '');
+  const [cvVersion, setCvVersion] = useState(
+    application.cvVersion ?? defaultCvName,
+  );
   const [appliedDate, setAppliedDate] = useState(
     application.appliedDate ?? getTodayYmd(),
   );
@@ -83,6 +98,7 @@ export default function ApplicationDetail({
 
   const [newTaskText, setNewTaskText] = useState('');
   const [newNoteText, setNewNoteText] = useState('');
+  const inlineCvUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -102,6 +118,15 @@ export default function ApplicationDetail({
   function handleSelectTarget(target: ApplicationStatus) {
     setSelectedTarget(target);
     setTransitionError('');
+  }
+
+  async function handleInlineCvUpload(files: FileList | null) {
+    if (!files || files.length === 0 || !onUploadCvFiles) return;
+    const added = await onUploadCvFiles(files);
+    if (added.length > 0) {
+      setCvVersion(added[0].name);
+      if (transitionError) setTransitionError('');
+    }
   }
 
   function handleConfirmTransition(event: React.FormEvent<HTMLFormElement>) {
@@ -156,6 +181,16 @@ export default function ApplicationDetail({
     totalChecklist === 0 ? 0 : Math.round((doneCount / totalChecklist) * 100);
   const currentStepIndex = PIPELINE_STEPS.indexOf(application.status);
 
+  const attachedCvDoc = application.cvVersion
+    ? cvDocuments.find(
+        (c) => c.name.toLowerCase() === application.cvVersion!.toLowerCase(),
+      )
+    : undefined;
+
+  const matchingVaultCv = cvDocuments.some((c) => c.name === cvVersion)
+    ? cvVersion
+    : '';
+
   return (
     <div
       className="dialog-backdrop"
@@ -193,17 +228,21 @@ export default function ApplicationDetail({
             </div>
           </div>
 
-          <div className="app-card-badges">
-            <span className={`badge badge-${application.status.toLowerCase()}`}>
-              <span className="badge-dot" aria-hidden="true" />
+          <div className="workspace-actions">
+            <span className={`status-stamp status-${application.status.toLowerCase()}`}>
               {STATUS_LABELS[application.status]}
             </span>
 
-            {ghostRisk && (
-              <span className="badge badge-danger">
-                <AlertTriangle size={12} aria-hidden="true" />
-                Rawan Ghosting
-              </span>
+            {attachedCvDoc?.dataUrl && (
+              <a
+                href={attachedCvDoc.dataUrl}
+                download={attachedCvDoc.name}
+                className="btn btn-secondary btn-sm"
+                style={{ textDecoration: 'none' }}
+              >
+                <Download size={13} aria-hidden="true" />
+                Unduh CV
+              </a>
             )}
 
             {canSimulateGhost && (
@@ -238,6 +277,16 @@ export default function ApplicationDetail({
         </div>
 
         <div className="dialog-body">
+          {ghostRisk && (
+            <div className="alert-inline" role="status">
+              <AlertTriangle size={15} aria-hidden="true" />
+              <span>
+                Rawan Ghosting — belum ada perubahan status lebih dari 14 hari. Pertimbangkan
+                follow-up HRD atau pindahkan ke Ghosted.
+              </span>
+            </div>
+          )}
+
           <div className="detail-grid">
             <div className="detail-col">
               {/* Tahap Seleksi & State Machine */}
@@ -248,7 +297,7 @@ export default function ApplicationDetail({
                   </h3>
                   {application.status === 'GHOSTED' && (
                     <span className="field-hint">
-                      Status Ghosted hanya dapat kembali ke Screening.
+                      Khusus status Ghosted hanya boleh kembali ke Screening.
                     </span>
                   )}
                 </div>
@@ -311,38 +360,95 @@ export default function ApplicationDetail({
                     )}
 
                     {activeTarget === 'APPLIED' && (
-                      <div className="form-grid-2">
-                        <div className="field">
-                          <label htmlFor="trans-cv" className="field-label">
-                            Versi CV
-                          </label>
-                          <input
-                            id="trans-cv"
-                            className="input"
-                            value={cvVersion}
-                            onChange={(e) => {
-                              setCvVersion(e.target.value);
-                              if (transitionError) setTransitionError('');
-                            }}
-                            placeholder="Misal: Kapten-CV-v2.pdf"
-                          />
+                      <>
+                        {(cvDocuments.length > 0 || onUploadCvFiles) && (
+                          <div className="form-grid-2" style={{ alignItems: 'end' }}>
+                            {cvDocuments.length > 0 && (
+                              <div className="field">
+                                <label htmlFor="trans-cv-vault" className="field-label">
+                                  Pilih dari CV Vault
+                                </label>
+                                <select
+                                  id="trans-cv-vault"
+                                  className="select"
+                                  value={matchingVaultCv}
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      setCvVersion(e.target.value);
+                                      if (transitionError) setTransitionError('');
+                                    }
+                                  }}
+                                >
+                                  <option value="">-- Pilih CV tersimpan --</option>
+                                  {cvDocuments.map((cv) => (
+                                    <option key={cv.id} value={cv.name}>
+                                      {cv.name} ({cv.label}){cv.isDefault ? ' ★' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
+                            {onUploadCvFiles && (
+                              <div>
+                                <input
+                                  ref={inlineCvUploadRef}
+                                  type="file"
+                                  multiple
+                                  accept=".pdf,.doc,.docx,application/pdf"
+                                  className="sr-only"
+                                  onChange={(e) => {
+                                    void handleInlineCvUpload(e.target.files);
+                                    e.target.value = '';
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ height: 40, width: '100%' }}
+                                  onClick={() => inlineCvUploadRef.current?.click()}
+                                >
+                                  <Upload size={14} aria-hidden="true" />
+                                  Upload CV Baru
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="form-grid-2">
+                          <div className="field">
+                            <label htmlFor="trans-cv" className="field-label">
+                              Versi CV
+                            </label>
+                            <input
+                              id="trans-cv"
+                              className="input"
+                              value={cvVersion}
+                              onChange={(e) => {
+                                setCvVersion(e.target.value);
+                                if (transitionError) setTransitionError('');
+                              }}
+                              placeholder="Misal: Kapten-CV-v2.pdf"
+                            />
+                          </div>
+                          <div className="field">
+                            <label htmlFor="trans-date" className="field-label">
+                              Tanggal Melamar
+                            </label>
+                            <input
+                              id="trans-date"
+                              type="date"
+                              className="input"
+                              value={appliedDate}
+                              onChange={(e) => {
+                                setAppliedDate(e.target.value);
+                                if (transitionError) setTransitionError('');
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="field">
-                          <label htmlFor="trans-date" className="field-label">
-                            Tanggal Melamar
-                          </label>
-                          <input
-                            id="trans-date"
-                            type="date"
-                            className="input"
-                            value={appliedDate}
-                            onChange={(e) => {
-                              setAppliedDate(e.target.value);
-                              if (transitionError) setTransitionError('');
-                            }}
-                          />
-                        </div>
-                      </div>
+                      </>
                     )}
 
                     {activeTarget === 'INTERVIEW' && (
@@ -417,15 +523,27 @@ export default function ApplicationDetail({
                 )}
               </section>
 
-              {/* Daftar Persiapan (Nested Checklist) */}
+              {/* Daftar Persiapan (Nested Checklist + 1-Click Template) */}
               <section className="detail-block" aria-labelledby="checklist-heading">
                 <div className="block-header">
                   <h3 id="checklist-heading" className="block-title">
                     Daftar Persiapan
                   </h3>
-                  <span className="field-hint tabular-nums">
-                    {doneCount} / {totalChecklist} selesai
-                  </span>
+                  <div className="workspace-actions">
+                    {onApplyChecklistTemplate && totalChecklist === 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => onApplyChecklistTemplate(application.id)}
+                      >
+                        <ListChecks size={13} aria-hidden="true" />
+                        Isi Template Persiapan
+                      </button>
+                    )}
+                    <span className="field-hint tabular-nums">
+                      {doneCount} / {totalChecklist} selesai
+                    </span>
+                  </div>
                 </div>
 
                 <div
@@ -440,8 +558,8 @@ export default function ApplicationDetail({
 
                 {application.checklist.length === 0 ? (
                   <p className="panel-desc">
-                    Belum ada checklist persiapan. Tambahkan tugas seperti riset perusahaan
-                    atau latihan live coding.
+                    Belum ada checklist persiapan. Tambah manual atau pakai Template
+                    Persiapan standar.
                   </p>
                 ) : (
                   <ul className="checklist-items">
@@ -486,7 +604,7 @@ export default function ApplicationDetail({
                   <button
                     type="submit"
                     className="btn btn-primary btn-sm"
-                    style={{ height: 38 }}
+                    style={{ height: 40 }}
                   >
                     <Plus size={14} aria-hidden="true" />
                     Tambah
@@ -513,7 +631,7 @@ export default function ApplicationDetail({
                 <ul className="timeline">
                   {application.activityLogs.map((log) => (
                     <li key={log.id} className="timeline-item">
-                      <span className="timeline-dot" aria-hidden="true" />
+                      <span className="timeline-mark" aria-hidden="true" />
                       <div>
                         <p className="timeline-time tabular-nums">
                           {formatDateTime(log.timestamp)}
@@ -538,7 +656,7 @@ export default function ApplicationDetail({
                   <button
                     type="submit"
                     className="btn btn-secondary btn-sm"
-                    style={{ height: 38 }}
+                    style={{ height: 40 }}
                   >
                     <Send size={13} aria-hidden="true" />
                     Catat

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertCircle, Plus, X } from 'lucide-react';
+import { AlertCircle, Plus, Upload, X } from 'lucide-react';
 import type { Application, WorkMode } from '../types/application';
 import { WORK_MODES } from '../types/application';
+import type { CvDocument } from '../types/cv';
 import { isDuplicateApplication, parseSkillsInput } from '../utils/validation';
 import { getTodayYmd } from '../utils/format';
 
@@ -10,21 +11,28 @@ type ErrorField = 'company' | 'role' | 'cvVersion' | 'appliedDate';
 
 interface ApplicationFormProps {
   applications: Application[];
+  cvDocuments?: CvDocument[];
+  onUploadCvFiles?: (files: FileList) => Promise<CvDocument[]>;
   onAdd: (app: Application) => void;
   onClose: () => void;
 }
 
 export default function ApplicationForm({
   applications,
+  cvDocuments = [],
+  onUploadCvFiles,
   onAdd,
   onClose,
 }: ApplicationFormProps) {
+  const defaultCvName =
+    cvDocuments.find((c) => c.isDefault)?.name ?? cvDocuments[0]?.name ?? '';
+
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [workMode, setWorkMode] = useState<WorkMode>('Remote');
   const [status, setStatus] = useState<InitialStatus>('WISHLIST');
   const [skillsInput, setSkillsInput] = useState('');
-  const [cvVersion, setCvVersion] = useState('');
+  const [cvVersion, setCvVersion] = useState(defaultCvName);
   const [appliedDate, setAppliedDate] = useState(getTodayYmd);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorField, setErrorField] = useState<ErrorField | null>(null);
@@ -33,6 +41,7 @@ export default function ApplicationForm({
   const roleRef = useRef<HTMLInputElement>(null);
   const cvVersionRef = useRef<HTMLInputElement>(null);
   const appliedDateRef = useRef<HTMLInputElement>(null);
+  const inlineCvUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     companyRef.current?.focus();
@@ -52,6 +61,15 @@ export default function ApplicationForm({
     if (errorMessage) {
       setErrorMessage('');
       setErrorField(null);
+    }
+  }
+
+  async function handleInlineCvUpload(files: FileList | null) {
+    if (!files || files.length === 0 || !onUploadCvFiles) return;
+    const added = await onUploadCvFiles(files);
+    if (added.length > 0) {
+      setCvVersion(added[0].name);
+      clearError();
     }
   }
 
@@ -125,6 +143,8 @@ export default function ApplicationForm({
     onAdd(newApplication);
     onClose();
   }
+
+  const matchingVaultCv = cvDocuments.some((c) => c.name === cvVersion) ? cvVersion : '';
 
   return (
     <div
@@ -261,41 +281,98 @@ export default function ApplicationForm({
             </div>
 
             {status === 'APPLIED' && (
-              <div className="form-grid-2">
-                <div className="field">
-                  <label htmlFor="app-cv-version" className="field-label">
-                    Versi CV (Wajib)
-                  </label>
-                  <input
-                    ref={cvVersionRef}
-                    id="app-cv-version"
-                    className={`input ${errorField === 'cvVersion' ? 'is-invalid' : ''}`}
-                    aria-invalid={errorField === 'cvVersion'}
-                    value={cvVersion}
-                    onChange={(e) => {
-                      setCvVersion(e.target.value);
-                      clearError();
-                    }}
-                    placeholder="Misal: Kapten-CV-v2.pdf"
-                  />
-                </div>
+              <div className="cv-picker-box">
+                {(cvDocuments.length > 0 || onUploadCvFiles) && (
+                  <div className="form-grid-2" style={{ alignItems: 'end' }}>
+                    {cvDocuments.length > 0 && (
+                      <div className="field">
+                        <label htmlFor="app-cv-vault-select" className="field-label">
+                          Pilih dari CV Vault
+                        </label>
+                        <select
+                          id="app-cv-vault-select"
+                          className="select"
+                          value={matchingVaultCv}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setCvVersion(e.target.value);
+                              clearError();
+                            }
+                          }}
+                        >
+                          <option value="">-- Pilih CV tersimpan --</option>
+                          {cvDocuments.map((cv) => (
+                            <option key={cv.id} value={cv.name}>
+                              {cv.name} ({cv.label}){cv.isDefault ? ' ★' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
-                <div className="field">
-                  <label htmlFor="app-applied-date" className="field-label">
-                    Tanggal Melamar (Wajib)
-                  </label>
-                  <input
-                    ref={appliedDateRef}
-                    id="app-applied-date"
-                    type="date"
-                    className={`input ${errorField === 'appliedDate' ? 'is-invalid' : ''}`}
-                    aria-invalid={errorField === 'appliedDate'}
-                    value={appliedDate}
-                    onChange={(e) => {
-                      setAppliedDate(e.target.value);
-                      clearError();
-                    }}
-                  />
+                    {onUploadCvFiles && (
+                      <div>
+                        <input
+                          ref={inlineCvUploadRef}
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,application/pdf"
+                          className="sr-only"
+                          onChange={(e) => {
+                            void handleInlineCvUpload(e.target.files);
+                            e.target.value = '';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ height: 40, width: '100%' }}
+                          onClick={() => inlineCvUploadRef.current?.click()}
+                        >
+                          <Upload size={14} aria-hidden="true" />
+                          Upload CV Baru
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="form-grid-2">
+                  <div className="field">
+                    <label htmlFor="app-cv-version" className="field-label">
+                      Versi CV (Wajib)
+                    </label>
+                    <input
+                      ref={cvVersionRef}
+                      id="app-cv-version"
+                      className={`input ${errorField === 'cvVersion' ? 'is-invalid' : ''}`}
+                      aria-invalid={errorField === 'cvVersion'}
+                      value={cvVersion}
+                      onChange={(e) => {
+                        setCvVersion(e.target.value);
+                        clearError();
+                      }}
+                      placeholder="Misal: Kapten-CV-v2.pdf"
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label htmlFor="app-applied-date" className="field-label">
+                      Tanggal Melamar (Wajib)
+                    </label>
+                    <input
+                      ref={appliedDateRef}
+                      id="app-applied-date"
+                      type="date"
+                      className={`input ${errorField === 'appliedDate' ? 'is-invalid' : ''}`}
+                      aria-invalid={errorField === 'appliedDate'}
+                      value={appliedDate}
+                      onChange={(e) => {
+                        setAppliedDate(e.target.value);
+                        clearError();
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
