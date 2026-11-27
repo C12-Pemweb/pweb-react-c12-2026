@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import type { Application } from './types/application';
 import type { JobListing } from './types/job';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -8,6 +10,7 @@ import {
   normalizeStoredSkills,
 } from './utils/validation';
 import JobExplorer from './components/jobs/JobExplorer';
+import ApplicationForm from './components/ApplicationForm';
 
 const DEFAULT_SKILLS = ['React', 'TypeScript', 'CSS'];
 
@@ -22,6 +25,11 @@ export default function App() {
     [],
     normalizeStoredApplications,
   );
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  function handleAddApplication(newApp: Application) {
+    setApplications((prev) => [newApp, ...prev]);
+  }
 
   function handleSaveToWishlist(job: JobListing) {
     if (isDuplicateApplication(applications, job.company_name, job.title)) {
@@ -48,7 +56,7 @@ export default function App() {
       ],
     };
 
-    setApplications((prev) => [nextApp, ...prev]);
+    handleAddApplication(nextApp);
   }
 
   return (
@@ -58,6 +66,17 @@ export default function App() {
           <div className="brand">
             <span className="brand-mark" aria-hidden="true">AM</span>
             <span>Aku Mw Magang</span>
+          </div>
+
+          <div className="nav-actions">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setIsFormOpen(true)}
+            >
+              <Plus size={15} aria-hidden="true" />
+              Catat Lamaran
+            </button>
           </div>
         </div>
       </header>
@@ -70,6 +89,14 @@ export default function App() {
           onSaveToWishlist={handleSaveToWishlist}
         />
       </main>
+
+      {isFormOpen && (
+        <ApplicationForm
+          applications={applications}
+          onAdd={handleAddApplication}
+          onClose={() => setIsFormOpen(false)}
+        />
+      )}
     </div>
   );
 }
