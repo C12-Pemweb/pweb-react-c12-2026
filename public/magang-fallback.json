@@ -1,226 +1,137 @@
 [
   {
-    "id": 900001,
-    "title": "Frontend Developer Intern",
+    "id": 1001,
+    "title": "Frontend Engineering Intern (React & TypeScript)",
+    "company_name": "Nusantara Cloud Tech",
+    "category": "Software Development",
+    "candidate_required_location": "Surabaya (Hybrid)",
+    "salary": "Rp 4.500.000 / bulan",
+    "tags": ["React", "TypeScript", "CSS", "Git"]
+  },
+  {
+    "id": 1002,
+    "title": "Software Engineer Intern — Web Platform",
+    "company_name": "Bintang Commerce",
+    "category": "Software Development",
+    "candidate_required_location": "Indonesia (Remote)",
+    "salary": "Rp 6.000.000 / bulan",
+    "tags": ["React", "TypeScript", "CSS", "Testing", "REST API"]
+  },
+  {
+    "id": 1003,
+    "title": "Full-Stack Web Developer Intern",
+    "company_name": "Garuda FinTech",
+    "category": "Software Development",
+    "candidate_required_location": "Jakarta (Remote)",
+    "salary": "Rp 5.500.000 / bulan",
+    "tags": ["React", "TypeScript", "PostgreSQL", "Express", "Docker"]
+  },
+  {
+    "id": 1004,
+    "title": "DevOps & Cloud Infrastructure Intern",
+    "company_name": "AwanMerdeka Cloud",
+    "category": "DevOps / Sysadmin",
+    "candidate_required_location": "Jakarta (Remote)",
+    "salary": "Rp 5.200.000 / bulan",
+    "tags": ["Docker", "Linux", "CI/CD", "PostgreSQL", "Git"]
+  },
+  {
+    "id": 1005,
+    "title": "Frontend UI Engineer Intern",
     "company_name": "Pixel Pudding Studio",
     "category": "Software Development",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.000.000–Rp3.000.000/month",
-    "tags": [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "React",
-      "TypeScript"
-    ]
+    "candidate_required_location": "Bandung (Hybrid)",
+    "salary": "Rp 3.800.000 / bulan",
+    "tags": ["React", "CSS", "HTML", "JavaScript"]
   },
   {
-    "id": 900002,
-    "title": "Cybersecurity Research Intern",
+    "id": 1006,
+    "title": "Backend Engineer Intern (Go & Microservices)",
+    "company_name": "KaryaPay Digital",
+    "category": "Software Development",
+    "candidate_required_location": "Jakarta (Hybrid)",
+    "salary": "Rp 5.800.000 / bulan",
+    "tags": ["Go", "PostgreSQL", "Docker", "REST API", "Redis"]
+  },
+  {
+    "id": 1007,
+    "title": "Data Science & Analytics Intern",
+    "company_name": "Mindspark AI Indonesia",
+    "category": "Data Science",
+    "candidate_required_location": "Jakarta (Remote)",
+    "salary": "Rp 4.800.000 / bulan",
+    "tags": ["Python", "SQL", "Machine Learning", "Pandas"]
+  },
+  {
+    "id": 1008,
+    "title": "Cybersecurity Analyst Intern",
     "company_name": "Garuda Cyber Lab",
     "category": "Cybersecurity",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.500.000–Rp3.500.000/month",
-    "tags": [
-      "Cybersecurity",
-      "Networking",
-      "Linux",
-      "Python",
-      " problem solving"
-    ]
+    "candidate_required_location": "Surabaya (Onsite)",
+    "salary": "Rp 4.200.000 / bulan",
+    "tags": ["Linux", "Networking", "Python", "SIEM", "Docker"]
   },
   {
-    "id": 900003,
-    "title": "Junior AI Research Intern",
-    "company_name": "Mindspark AI",
-    "category": "Data Science",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.500.000–Rp4.000.000/month",
-    "tags": [
-      "Python",
-      "Machine Learning",
-      "Data Analysis",
-      "Mathematics"
-    ]
-  },
-  {
-    "id": 900004,
-    "title": "Cloud Computing Intern",
-    "company_name": "Awan Nusantara",
-    "category": "DevOps and Sysadmin",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.000.000–Rp3.500.000/month",
-    "tags": [
-      "Cloud Computing",
-      "Linux",
-      "Docker",
-      "Networking",
-      "AWS"
-    ]
-  },
-  {
-    "id": 900005,
-    "title": "IoT Smart Garden Intern",
-    "company_name": "Kebun Pintar Labs",
-    "category": "Product",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.800.000–Rp2.800.000/month",
-    "tags": [
-      "IoT",
-      "Arduino",
-      "C++",
-      "Sensors",
-      "Embedded Systems"
-    ]
-  },
-  {
-    "id": 900006,
-    "title": "UI/UX Designer Intern",
+    "id": 1009,
+    "title": "Product Design (UI/UX) Intern",
     "company_name": "Mochi Interface",
     "category": "Design",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.000.000–Rp3.000.000/month",
-    "tags": [
-      "UI Design",
-      "UX Research",
-      "Figma",
-      "Prototyping",
-      "Visual Design"
-    ]
+    "candidate_required_location": "Yogyakarta (Remote)",
+    "salary": "Rp 3.500.000 / bulan",
+    "tags": ["Figma", "CSS", "Prototyping", "UX Research"]
   },
   {
-    "id": 900007,
-    "title": "Digital Fashion Designer Intern",
-    "company_name": "Kirana Digital Atelier",
+    "id": 1010,
+    "title": "Mobile Developer Intern (React Native)",
+    "company_name": "EduSpark Indonesia",
+    "category": "Software Development",
+    "candidate_required_location": "Bandung (Remote)",
+    "salary": "Rp 4.400.000 / bulan",
+    "tags": ["React", "TypeScript", "REST API", "Git"]
+  },
+  {
+    "id": 1011,
+    "title": "QA Automation Engineer Intern",
+    "company_name": "LogistikCepat Tech",
+    "category": "QA",
+    "candidate_required_location": "Jakarta (Hybrid)",
+    "salary": "Rp 4.000.000 / bulan",
+    "tags": ["TypeScript", "Playwright", "Testing", "CI/CD", "Git"]
+  },
+  {
+    "id": 1012,
+    "title": "Platform & SRE Intern",
+    "company_name": "Sentosa Data Systems",
+    "category": "DevOps / Sysadmin",
+    "candidate_required_location": "Jakarta (Onsite)",
+    "salary": "Rp 5.000.000 / bulan",
+    "tags": ["Docker", "Kubernetes", "Linux", "Terraform"]
+  },
+  {
+    "id": 1013,
+    "title": "Junior Web Developer Intern",
+    "company_name": "Sinar Kreatif Digital",
+    "category": "Software Development",
+    "candidate_required_location": "Surabaya (Onsite)",
+    "salary": "Rp 3.200.000 / bulan",
+    "tags": ["HTML", "CSS", "JavaScript", "React", "Git"]
+  },
+  {
+    "id": 1014,
+    "title": "MLOps Engineering Intern",
+    "company_name": "NusaIntel Analytics",
+    "category": "Data Science",
+    "candidate_required_location": "Indonesia (Remote)",
+    "salary": "Rp 5.600.000 / bulan",
+    "tags": ["Python", "Docker", "FastAPI", "PostgreSQL", "CI/CD"]
+  },
+  {
+    "id": 1015,
+    "title": "Design Systems Engineer Intern",
+    "company_name": "Rakit Produk Studio",
     "category": "Design",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.000.000–Rp3.200.000/month",
-    "tags": [
-      "Fashion Design",
-      "Illustration",
-      "Adobe Illustrator",
-      "Creativity",
-      "Trend Research"
-    ]
-  },
-  {
-    "id": 900008,
-    "title": "Fashion Tech Product Intern",
-    "company_name": "ThreadTheory Indonesia",
-    "category": "Product",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.200.000–Rp3.500.000/month",
-    "tags": [
-      "Fashion",
-      "Product Research",
-      "E-commerce",
-      "Data Analysis",
-      "Communication"
-    ]
-  },
-  {
-    "id": 900009,
-    "title": "Fashion Content & Styling Intern",
-    "company_name": "Lemari Ceria",
-    "category": "Writing",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.500.000–Rp2.500.000/month",
-    "tags": [
-      "Fashion Styling",
-      "Content Creation",
-      "Photography",
-      "Social Media",
-      "Creativity"
-    ]
-  },
-  {
-    "id": 900010,
-    "title": "Dessert Brand Creative Intern",
-    "company_name": "Sugarcloud Patisserie",
-    "category": "Design",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.800.000–Rp2.700.000/month",
-    "tags": [
-      "Branding",
-      "Graphic Design",
-      "Social Media",
-      "Photography",
-      "Creativity"
-    ]
-  },
-  {
-    "id": 900011,
-    "title": "Food Innovation Intern",
-    "company_name": "Dapur Eksperimen",
-    "category": "Product",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp2.000.000–Rp3.000.000/month",
-    "tags": [
-      "Food Science",
-      "Research",
-      "Product Development",
-      "Food Safety",
-      "Creativity"
-    ]
-  },
-  {
-    "id": 900012,
-    "title": "Cute Café Social Media Intern",
-    "company_name": "Pinky Whisk Café",
-    "category": "Marketing",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.500.000–Rp2.300.000/month",
-    "tags": [
-      "Social Media",
-      "Content Creation",
-      "Photography",
-      "Copywriting",
-      "Marketing"
-    ]
-  },
-  {
-    "id": 900013,
-    "title": "Virtual Pet & Mascot Designer Intern",
-    "company_name": "Boba Buddies Studio",
-    "category": "Design",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.800.000–Rp2.800.000/month",
-    "tags": [
-      "Character Design",
-      "Digital Illustration",
-      "2D Art",
-      "Procreate",
-      "Creativity"
-    ]
-  },
-  {
-    "id": 900014,
-    "title": "Sticker Pack Illustrator Intern",
-    "company_name": "Gemoy Goods",
-    "category": "Design",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.500.000–Rp2.400.000/month",
-    "tags": [
-      "Illustration",
-      "Digital Art",
-      "Character Design",
-      "IbisPaint",
-      "Visual Design"
-    ]
-  },
-  {
-    "id": 900015,
-    "title": "Cat Café Digital Experience Intern",
-    "company_name": "Meowmori Café",
-    "category": "Product",
-    "candidate_required_location": "Indonesia",
-    "salary": "Rp1.800.000–Rp2.800.000/month",
-    "tags": [
-      "UI Design",
-      "Customer Experience",
-      "Web Design",
-      "Creativity",
-      "Communication"
-    ]
+    "candidate_required_location": "Indonesia (Remote)",
+    "salary": "Rp 4.700.000 / bulan",
+    "tags": ["React", "TypeScript", "CSS", "Figma", "Accessibility"]
   }
 ]
