@@ -93,20 +93,13 @@ export default function WarRoom({
 
   return (
     <section className="warroom-section" aria-labelledby="warroom-heading">
-      <div className="warroom-header">
-        <div>
-          <h2 id="warroom-heading" className="section-heading">
-            War Room Pipeline
-          </h2>
-          <p className="section-subtitle">
-            Kelola progres lamaran, checklist persiapan, deteksi ghosting, dan latihan
-            interview.
-          </p>
-        </div>
-
-        <span className="toolbar-meta tabular-nums">
-          {visibleApplications.length} dari {applications.length} lamaran
-        </span>
+      <div className="board-head">
+        <h2 id="warroom-heading" className="section-heading">
+          Lamaran Saya{' '}
+          <span className="section-count tabular-nums">
+            ({visibleApplications.length} / {applications.length})
+          </span>
+        </h2>
       </div>
 
       <div className="toolbar">
@@ -126,23 +119,6 @@ export default function WarRoom({
           />
           <span className="kbd-hint" aria-hidden="true">/</span>
         </div>
-
-        <label htmlFor="warroom-status-filter" className="sr-only">
-          Filter status lamaran
-        </label>
-        <select
-          id="warroom-status-filter"
-          className="select toolbar-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | ApplicationStatus)}
-        >
-          <option value="ALL">Semua Status</option>
-          {ALL_STATUSES.map((st) => (
-            <option key={st} value={st}>
-              {STATUS_LABELS[st]}
-            </option>
-          ))}
-        </select>
 
         <label htmlFor="warroom-sort" className="sr-only">
           Urutkan lamaran
@@ -166,6 +142,35 @@ export default function WarRoom({
           />
           <span>Hanya Rawan Ghosting</span>
         </label>
+      </div>
+
+      <div
+        className="category-pills"
+        role="group"
+        aria-label="Filter status lamaran"
+      >
+        <button
+          type="button"
+          className={`pill-toggle ${statusFilter === 'ALL' ? 'is-selected' : ''}`}
+          aria-pressed={statusFilter === 'ALL'}
+          onClick={() => setStatusFilter('ALL')}
+        >
+          Semua Status
+        </button>
+        {ALL_STATUSES.map((st) => {
+          const isSelected = statusFilter === st;
+          return (
+            <button
+              key={st}
+              type="button"
+              className={`pill-toggle ${isSelected ? 'is-selected' : ''}`}
+              aria-pressed={isSelected}
+              onClick={() => setStatusFilter(st)}
+            >
+              {STATUS_LABELS[st]}
+            </button>
+          );
+        })}
       </div>
 
       {applications.length === 0 ? (
@@ -247,9 +252,11 @@ export default function WarRoom({
 
                   <div className="app-card-badges">
                     <span className={`badge badge-${app.status.toLowerCase()}`}>
+                      <span className="badge-dot" aria-hidden="true" />
                       {STATUS_LABELS[app.status]}
                     </span>
                     <span className={`badge badge-${matchTier} tabular-nums`}>
+                      <span className="badge-dot" aria-hidden="true" />
                       {match.score}% Match
                     </span>
                   </div>

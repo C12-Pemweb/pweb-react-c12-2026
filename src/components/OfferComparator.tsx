@@ -28,7 +28,7 @@ export default function OfferComparator({
       <section className="comparator-section" aria-labelledby="comparator-heading">
         <div>
           <h2 id="comparator-heading" className="section-heading">
-            Bandingkan Offer Magang
+            Perbandingan Skor Berbobot
           </h2>
           <p className="section-subtitle">
             Bobot penilaian: Uang Saku 50% · Mode Kerja 25% · Kecocokan Skill 25%
@@ -91,7 +91,7 @@ export default function OfferComparator({
       <div className="comparator-bar">
         <div>
           <h2 id="comparator-heading" className="section-heading">
-            Bandingkan Offer Magang
+            Perbandingan Skor Berbobot
           </h2>
           <p className="section-subtitle">
             Bobot penilaian: Uang Saku 50% · Mode Kerja 25% · Kecocokan Skill 25%
@@ -160,7 +160,10 @@ export default function OfferComparator({
                   </span>
                 )}
                 {winner === 'TIE' && (
-                  <span className="badge badge-accent">Skor Seimbang</span>
+                  <span className="badge badge-accent">
+                    <span className="badge-dot" aria-hidden="true" />
+                    Skor Seimbang
+                  </span>
                 )}
               </div>
 

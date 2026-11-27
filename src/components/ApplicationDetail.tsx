@@ -195,6 +195,7 @@ export default function ApplicationDetail({
 
           <div className="app-card-badges">
             <span className={`badge badge-${application.status.toLowerCase()}`}>
+              <span className="badge-dot" aria-hidden="true" />
               {STATUS_LABELS[application.status]}
             </span>
 
