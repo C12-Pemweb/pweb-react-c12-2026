@@ -42,6 +42,24 @@ interface PendingUndo {
 const DEFAULT_SKILLS = ['React', 'TypeScript', 'CSS'];
 const UNDO_DURATION_SECONDS = 5;
 
+const TAB_HEADER_COPY: Record<ActiveTab, { title: string; subtitle: string }> = {
+  explore: {
+    title: 'Halo, Kapten!',
+    subtitle:
+      'Jelajahi lowongan magang, pantau skor kecocokan skill secara langsung, dan simpan target ke pipeline.',
+  },
+  pipeline: {
+    title: 'War Room Pipeline',
+    subtitle:
+      'Kelola tahap seleksi ketat, checklist persiapan, deteksi rawan ghosting, dan latihan interview berwaktu.',
+  },
+  compare: {
+    title: 'Offer Comparator',
+    subtitle:
+      'Bandingkan dua tawaran magang secara objektif berdasarkan uang saku, mode kerja, dan kecocokan skill.',
+  },
+};
+
 function describeTransition(
   from: ApplicationStatus,
   to: ApplicationStatus,
@@ -427,148 +445,182 @@ export default function App() {
     }
   }
 
+  const headerCopy = TAB_HEADER_COPY[activeTab];
+
   return (
     <div className="app-shell">
-      <header className="top-nav">
-        <div className="top-nav-inner">
-          <div className="brand">
-            <span className="brand-mark" aria-hidden="true">AM</span>
-            <span>Aku Mw Magang</span>
+      <aside className="side-rail" aria-label="Navigasi aplikasi">
+        <div className="rail-top">
+          <div className="brand-link">
+            <span className="brand-mark" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                <path d="M5 7h9.5L10 16l4.5 9H5l4.5-9L5 7z" fill="#FAF0E1" />
+                <path d="M17.5 7H27v18h-9.5l4.5-9-4.5-9z" fill="#197A39" />
+                <circle cx="24" cy="10" r="2.3" fill="#EAB308" />
+              </svg>
+            </span>
+            <span className="brand-label-mobile">Aku Mw Magang</span>
           </div>
 
-          <nav className="nav-tabs" aria-label="Navigasi utama">
+          <nav className="rail-nav" aria-label="Navigasi utama">
             <button
               type="button"
-              className={`nav-tab ${activeTab === 'explore' ? 'is-active' : ''}`}
+              className={`rail-btn ${activeTab === 'explore' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('explore')}
+              aria-current={activeTab === 'explore' ? 'page' : undefined}
             >
-              <Compass size={15} aria-hidden="true" />
-              <span>Eksplorasi Lowongan</span>
+              <Compass size={19} aria-hidden="true" />
+              <span>Eksplorasi</span>
             </button>
 
             <button
               type="button"
-              className={`nav-tab ${activeTab === 'pipeline' ? 'is-active' : ''}`}
+              className={`rail-btn ${activeTab === 'pipeline' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('pipeline')}
+              aria-current={activeTab === 'pipeline' ? 'page' : undefined}
             >
-              <Briefcase size={15} aria-hidden="true" />
-              <span>Pipeline Lamaran</span>
-              <span className="nav-count tabular-nums">{applications.length}</span>
+              <Briefcase size={19} aria-hidden="true" />
+              <span>Pipeline</span>
+              <span className="rail-badge tabular-nums">{applications.length}</span>
             </button>
 
             <button
               type="button"
-              className={`nav-tab ${activeTab === 'compare' ? 'is-active' : ''}`}
+              className={`rail-btn ${activeTab === 'compare' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('compare')}
+              aria-current={activeTab === 'compare' ? 'page' : undefined}
             >
-              <Scale size={15} aria-hidden="true" />
-              <span>Bandingkan Offer</span>
-              <span className="nav-count tabular-nums">{stats.offerCount}</span>
+              <Scale size={19} aria-hidden="true" />
+              <span>Offer</span>
+              <span className="rail-badge tabular-nums">{stats.offerCount}</span>
             </button>
           </nav>
-
-          <div className="nav-actions">
-            <button
-              type="button"
-              className="nav-icon-btn"
-              onClick={handleExportBackup}
-              title="Ekspor backup data (JSON)"
-              aria-label="Ekspor backup JSON"
-            >
-              <Download size={15} aria-hidden="true" />
-            </button>
-
-            <button
-              type="button"
-              className="nav-icon-btn"
-              onClick={() => fileInputRef.current?.click()}
-              title="Impor backup data (JSON)"
-              aria-label="Impor backup JSON"
-            >
-              <Upload size={15} aria-hidden="true" />
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json"
-              className="sr-only"
-              onChange={(e) => {
-                void handleImportBackup(e);
-              }}
-              aria-label="Pilih file backup JSON"
-            />
-
-            <button
-              type="button"
-              className="nav-icon-btn"
-              onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-              title={theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'}
-              aria-label={
-                theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'
-              }
-            >
-              {theme === 'light' ? (
-                <Moon size={15} aria-hidden="true" />
-              ) : (
-                <Sun size={15} aria-hidden="true" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() => setIsFormOpen(true)}
-            >
-              <Plus size={15} aria-hidden="true" />
-              Catat Lamaran
-            </button>
-          </div>
         </div>
-      </header>
 
-      <main className="app-main">
-        <ConflictBanner
-          conflicts={conflicts}
-          onInspectPipeline={
-            activeTab !== 'pipeline' ? () => setActiveTab('pipeline') : undefined
-          }
-        />
+        <div className="rail-bottom">
+          <button
+            type="button"
+            className="circle-icon-btn"
+            onClick={handleExportBackup}
+            title="Ekspor backup data (JSON)"
+            aria-label="Ekspor backup JSON"
+          >
+            <Download size={16} aria-hidden="true" />
+          </button>
 
-        <StatsDashboard stats={stats} />
+          <button
+            type="button"
+            className="circle-icon-btn"
+            onClick={() => fileInputRef.current?.click()}
+            title="Impor backup data (JSON)"
+            aria-label="Impor backup JSON"
+          >
+            <Upload size={16} aria-hidden="true" />
+          </button>
 
-        {activeTab === 'explore' && (
-          <JobExplorer
-            kaptenSkills={kaptenSkills}
-            onSkillsChange={setKaptenSkills}
-            applications={applications}
-            onSaveToWishlist={handleSaveToWishlist}
-            searchInputRef={searchInputRef}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="sr-only"
+            onChange={(e) => {
+              void handleImportBackup(e);
+            }}
+            aria-label="Pilih file backup JSON"
           />
-        )}
 
-        {activeTab === 'pipeline' && (
-          <WarRoom
-            applications={applications}
-            kaptenSkills={kaptenSkills}
-            nowMs={nowMs}
-            onSelectApplication={setSelectedAppId}
-            onSimulateGhosting={handleSimulateGhosting}
-            onDeleteApplication={handleDeleteApplication}
-            onOpenManualForm={() => setIsFormOpen(true)}
-            onGoToExplorer={() => setActiveTab('explore')}
-            searchInputRef={searchInputRef}
-          />
-        )}
+          <button
+            type="button"
+            className="circle-icon-btn"
+            onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+            title={theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'}
+            aria-label={
+              theme === 'light' ? 'Aktifkan Mode Gelap' : 'Aktifkan Mode Terang'
+            }
+          >
+            {theme === 'light' ? (
+              <Moon size={16} aria-hidden="true" />
+            ) : (
+              <Sun size={16} aria-hidden="true" />
+            )}
+          </button>
 
-        {activeTab === 'compare' && (
-          <OfferComparator
-            applications={applications}
-            kaptenSkills={kaptenSkills}
-            onGoToPipeline={() => setActiveTab('pipeline')}
+          <span className="avatar-pill" title="Profil Kapten">
+            KP
+          </span>
+        </div>
+      </aside>
+
+      <div className="workspace-canvas">
+        <main className="app-main">
+          <header className="workspace-header">
+            <div>
+              <h1 className="workspace-title">{headerCopy.title}</h1>
+              <p className="workspace-subtitle">{headerCopy.subtitle}</p>
+            </div>
+
+            <div className="workspace-header-actions">
+              <span className="live-dot-pill tabular-nums">
+                <span
+                  className={`dot-anchor ${conflicts.length > 0 ? 'is-red' : stats.offerCount > 0 ? '' : 'is-gold'}`}
+                  aria-hidden="true"
+                />
+                {kaptenSkills.length} skill · {stats.activeCount} aktif
+              </span>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setIsFormOpen(true)}
+              >
+                <Plus size={16} aria-hidden="true" />
+                Catat Lamaran
+              </button>
+            </div>
+          </header>
+
+          <ConflictBanner
+            conflicts={conflicts}
+            onInspectPipeline={
+              activeTab !== 'pipeline' ? () => setActiveTab('pipeline') : undefined
+            }
           />
-        )}
-      </main>
+
+          <StatsDashboard stats={stats} />
+
+          {activeTab === 'explore' && (
+            <JobExplorer
+              kaptenSkills={kaptenSkills}
+              onSkillsChange={setKaptenSkills}
+              applications={applications}
+              onSaveToWishlist={handleSaveToWishlist}
+              searchInputRef={searchInputRef}
+            />
+          )}
+
+          {activeTab === 'pipeline' && (
+            <WarRoom
+              applications={applications}
+              kaptenSkills={kaptenSkills}
+              nowMs={nowMs}
+              onSelectApplication={setSelectedAppId}
+              onSimulateGhosting={handleSimulateGhosting}
+              onDeleteApplication={handleDeleteApplication}
+              onOpenManualForm={() => setIsFormOpen(true)}
+              onGoToExplorer={() => setActiveTab('explore')}
+              searchInputRef={searchInputRef}
+            />
+          )}
+
+          {activeTab === 'compare' && (
+            <OfferComparator
+              applications={applications}
+              kaptenSkills={kaptenSkills}
+              onGoToPipeline={() => setActiveTab('pipeline')}
+            />
+          )}
+        </main>
+      </div>
 
       {isFormOpen && (
         <ApplicationForm
