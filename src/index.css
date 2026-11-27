@@ -1607,13 +1607,22 @@ ol {
 }
 
 /* Responsive Breakpoints */
-@media (max-width: 1024px) {
+@media (max-width: 960px) {
   .kpi-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .kpi-cell {
     border-bottom: 1px solid var(--border);
+  }
+
+  .kpi-cell:nth-child(3) {
+    border-right: none;
+  }
+
+  .kpi-cell:nth-child(4),
+  .kpi-cell:nth-child(5) {
+    border-bottom: none;
   }
 
   .explorer-layout {
@@ -1643,9 +1652,12 @@ ol {
 
   .nav-tab {
     justify-content: center;
-    padding: 0.45rem 0.4rem;
-    font-size: 0.78rem;
-    gap: 0.3rem;
+    padding: 0.45rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    gap: 0.25rem;
+    white-space: normal;
+    text-align: center;
   }
 
   .nav-tab svg {
@@ -1659,6 +1671,14 @@ ol {
 
   .kpi-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-cell:nth-child(3) {
+    border-right: 1px solid var(--border);
+  }
+
+  .kpi-cell:nth-child(4) {
+    border-bottom: 1px solid var(--border);
   }
 
   .kpi-cell:nth-child(even) {
