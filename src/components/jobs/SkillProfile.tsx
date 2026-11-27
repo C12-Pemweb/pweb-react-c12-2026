@@ -36,14 +36,23 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
   }
 
   return (
-    <section className="surface sidebar-panel" aria-labelledby="skill-profile-heading">
-      <div>
-        <h2 id="skill-profile-heading" className="panel-heading">
-          Profil Skill Kapten
-        </h2>
-        <p className="panel-desc">
-          Digunakan untuk menghitung persentase kecocokan tiap lowongan secara langsung.
-        </p>
+    <section
+      className="surface-warm bento-panel"
+      aria-labelledby="skill-profile-heading"
+    >
+      <div className="panel-header-row">
+        <div>
+          <h2 id="skill-profile-heading" className="panel-heading">
+            Profil Skill Kapten
+          </h2>
+          <p className="panel-desc">
+            Skill ini langsung dipakai untuk menghitung Match Score % setiap lowongan.
+          </p>
+        </div>
+        <span className="badge badge-neutral tabular-nums">
+          <span className="badge-dot" aria-hidden="true" />
+          {skills.length} skill
+        </span>
       </div>
 
       <form className="skill-add-row" onSubmit={handleAddSkill}>
@@ -58,9 +67,9 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
             setNewSkill(e.target.value);
             if (error) setError('');
           }}
-          placeholder="Tambah skill..."
+          placeholder="Tambah skill, misal Docker, Go, Figma..."
         />
-        <button type="submit" className="btn btn-primary btn-sm" style={{ height: 38 }}>
+        <button type="submit" className="btn btn-primary btn-sm" style={{ height: 40 }}>
           <Plus size={15} aria-hidden="true" />
           Tambah
         </button>

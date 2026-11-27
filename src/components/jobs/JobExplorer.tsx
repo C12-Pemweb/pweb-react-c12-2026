@@ -121,41 +121,81 @@ export default function JobExplorer({
   }
 
   return (
-    <div className="explorer-layout">
-      <aside className="explorer-sidebar">
+    <div className="explorer-stack">
+      <div className="explorer-bento-top">
         <SkillProfile skills={kaptenSkills} onSkillsChange={onSkillsChange} />
 
-        <section className="surface sidebar-panel" aria-labelledby="source-heading">
-          <h2 id="source-heading" className="panel-heading">
-            Sumber Data Lowongan
-          </h2>
-          <div className="source-options" role="radiogroup" aria-label="Sumber data lowongan">
+        <section className="surface bento-panel" aria-labelledby="source-heading">
+          <div>
+            <h2 id="source-heading" className="panel-heading">
+              Sumber Data Lowongan
+            </h2>
+            <p className="panel-desc">
+              Pilih live API atau dataset magang Indonesia lokal.
+            </p>
+          </div>
+
+          <div
+            className="source-options"
+            role="radiogroup"
+            aria-label="Sumber data lowongan"
+          >
             <label className={`source-radio ${!useFallback ? 'is-selected' : ''}`}>
-              <input
-                type="radio"
-                name="job-source"
-                checked={!useFallback}
-                onChange={() => handleSourceChange(false)}
+              <span className="source-radio-left">
+                <input
+                  type="radio"
+                  name="job-source"
+                  checked={!useFallback}
+                  onChange={() => handleSourceChange(false)}
+                />
+                <Globe size={15} aria-hidden="true" />
+                <span>Remotive API (Live)</span>
+              </span>
+              <span
+                className={`dot-anchor ${!useFallback ? '' : 'is-neutral'}`}
+                aria-hidden="true"
               />
-              <Globe size={15} aria-hidden="true" />
-              <span>Remotive API (Live)</span>
             </label>
 
             <label className={`source-radio ${useFallback ? 'is-selected' : ''}`}>
-              <input
-                type="radio"
-                name="job-source"
-                checked={useFallback}
-                onChange={() => handleSourceChange(true)}
+              <span className="source-radio-left">
+                <input
+                  type="radio"
+                  name="job-source"
+                  checked={useFallback}
+                  onChange={() => handleSourceChange(true)}
+                />
+                <Database size={15} aria-hidden="true" />
+                <span>Dataset Magang ID (Lokal)</span>
+              </span>
+              <span
+                className={`dot-anchor ${useFallback ? 'is-gold' : 'is-neutral'}`}
+                aria-hidden="true"
               />
-              <Database size={15} aria-hidden="true" />
-              <span>Dataset Magang ID (Lokal)</span>
             </label>
           </div>
         </section>
-      </aside>
+      </div>
 
-      <section className="explorer-main" aria-label="Daftar lowongan magang">
+      <section className="board-section" aria-labelledby="recommended-jobs-heading">
+        <div className="board-head">
+          <div>
+            <h2 id="recommended-jobs-heading" className="section-heading">
+              Lowongan Tersedia{' '}
+              {!loading && !error && (
+                <span className="section-count tabular-nums">
+                  ({filteredJobs.length})
+                </span>
+              )}
+            </h2>
+          </div>
+
+          <span className="badge badge-neutral">
+            <span className="badge-dot" aria-hidden="true" />
+            Urut: Match Tertinggi
+          </span>
+        </div>
+
         <div className="toolbar">
           <div className="search-wrap">
             <Search size={16} className="search-icon" aria-hidden="true" />
@@ -173,32 +213,36 @@ export default function JobExplorer({
             />
             <span className="kbd-hint" aria-hidden="true">/</span>
           </div>
-
-          <label htmlFor="job-category-select" className="sr-only">
-            Filter kategori lowongan
-          </label>
-          <select
-            id="job-category-select"
-            className="select toolbar-select"
-            value={activeCategory}
-            onChange={(e) => setCategory(e.target.value)}
-            disabled={loading || Boolean(error)}
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat === 'Semua' ? 'Semua Kategori' : cat}
-              </option>
-            ))}
-          </select>
-
-          <span className="badge badge-neutral">Urut: Match Tertinggi</span>
         </div>
+
+        {!loading && !error && categories.length > 1 && (
+          <div
+            className="category-pills"
+            role="group"
+            aria-label="Filter kategori lowongan"
+          >
+            {categories.map((cat) => {
+              const isSelected = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`pill-toggle ${isSelected ? 'is-selected' : ''}`}
+                  aria-pressed={isSelected}
+                  onClick={() => setCategory(cat)}
+                >
+                  {cat === 'Semua' ? 'Semua Kategori' : cat}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {!loading && !error && (
           <div className="toolbar-meta">
             <span className="tabular-nums">
-              Menampilkan {filteredJobs.length} dari {jobs.length} lowongan (
-              {useFallback ? 'Dataset Magang ID Lokal' : 'Remotive Live API'})
+              Menampilkan {filteredJobs.length} dari {jobs.length} lowongan ·{' '}
+              {useFallback ? 'Dataset Magang ID Lokal' : 'Remotive Live API'}
             </span>
             {keyword !== debouncedKeyword && <span>Mencari...</span>}
           </div>
@@ -296,24 +340,26 @@ export default function JobExplorer({
               return (
                 <article key={job.id} className="surface job-card">
                   <div className="job-card-top">
-                    <div className="company-row">
-                      <div className="company-monogram" aria-hidden="true">
-                        {getCompanyInitials(job.company_name)}
-                      </div>
-                      <div className="company-info">
-                        <p className="company-name">{job.company_name}</p>
-                        <p className="company-loc">
-                          {job.candidate_required_location} · {job.category}
-                        </p>
-                      </div>
-                    </div>
-
+                    <span className="category-tag">{job.category}</span>
                     <span className={`badge badge-${tier} tabular-nums`}>
+                      <span className="badge-dot" aria-hidden="true" />
                       {match.score}% Match
                     </span>
                   </div>
 
-                  <h3 className="job-title">{job.title}</h3>
+                  <div>
+                    <h3 className="job-title">{job.title}</h3>
+                  </div>
+
+                  <div className="company-row">
+                    <div className="company-monogram" aria-hidden="true">
+                      {getCompanyInitials(job.company_name)}
+                    </div>
+                    <div className="company-info">
+                      <p className="company-name">{job.company_name}</p>
+                      <p className="company-loc">{job.candidate_required_location}</p>
+                    </div>
+                  </div>
 
                   {job.tags.length > 0 ? (
                     <div className="skill-tag-group" aria-label="Skill yang dibutuhkan">
@@ -338,7 +384,9 @@ export default function JobExplorer({
                       ))}
                     </div>
                   ) : (
-                    <p className="field-hint">Tidak ada tag skill spesifik pada lowongan ini.</p>
+                    <p className="field-hint">
+                      Tidak ada tag skill spesifik pada lowongan ini.
+                    </p>
                   )}
 
                   <div className="job-card-footer">
