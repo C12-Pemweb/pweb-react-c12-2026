@@ -37,22 +37,16 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
 
   return (
     <section
-      className="surface-warm bento-panel"
+      className="control-pane is-cream"
       aria-labelledby="skill-profile-heading"
     >
-      <div className="panel-header-row">
-        <div>
-          <h2 id="skill-profile-heading" className="panel-heading">
-            Profil Skill Kapten
-          </h2>
-          <p className="panel-desc">
-            Skill ini langsung dipakai untuk menghitung Match Score % setiap lowongan.
-          </p>
-        </div>
-        <span className="badge badge-neutral tabular-nums">
-          <span className="badge-dot" aria-hidden="true" />
-          {skills.length} skill
-        </span>
+      <div>
+        <h2 id="skill-profile-heading" className="panel-heading">
+          Profil Skill Kapten ({skills.length})
+        </h2>
+        <p className="panel-desc">
+          Menghitung persentase kecocokan setiap lowongan secara langsung.
+        </p>
       </div>
 
       <form className="skill-add-row" onSubmit={handleAddSkill}>
@@ -83,7 +77,7 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
 
       {skills.length === 0 ? (
         <p className="panel-desc">
-          Belum ada skill. Tambahkan skill agar Match Score dapat dihitung.
+          Belum ada skill. Tambahkan skill agar kecocokan lowongan bisa dihitung.
         </p>
       ) : (
         <ul className="skill-chip-list" aria-label="Daftar skill Kapten">

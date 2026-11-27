@@ -9,13 +9,15 @@ import {
   RefreshCw,
   Search,
   SearchX,
+  X,
 } from 'lucide-react';
 import type { Application } from '../../types/application';
+import { STATUS_LABELS } from '../../types/application';
 import type { JobListing } from '../../types/job';
 import { fetchFallbackJobs, fetchRemoteJobs } from '../../services/jobService';
 import { useDebounce } from '../../hooks/useDebounce';
 import { calculateSkillMatch, getMatchTier } from '../../utils/skillMatch';
-import { isDuplicateApplication } from '../../utils/validation';
+import { isFinalStatus } from '../../utils/stateMachine';
 import { getCompanyInitials } from '../../utils/format';
 import SkillProfile from './SkillProfile';
 
@@ -24,6 +26,7 @@ interface JobExplorerProps {
   onSkillsChange: (skills: string[]) => void;
   applications: Application[];
   onSaveToWishlist: (job: JobListing) => void;
+  onCancelApplication?: (id: string) => void;
   searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
@@ -32,6 +35,7 @@ export default function JobExplorer({
   onSkillsChange,
   applications,
   onSaveToWishlist,
+  onCancelApplication,
   searchInputRef,
 }: JobExplorerProps) {
   const [jobs, setJobs] = useState<JobListing[]>([]);
@@ -120,18 +124,28 @@ export default function JobExplorer({
     setUseFallback(nextFallback);
   }
 
+  function findMatchingApplication(job: JobListing): Application | undefined {
+    const c = job.company_name.trim().toLowerCase();
+    const r = job.title.trim().toLowerCase();
+    return applications.find(
+      (app) =>
+        app.company.trim().toLowerCase() === c &&
+        app.role.trim().toLowerCase() === r,
+    );
+  }
+
   return (
     <div className="explorer-stack">
-      <div className="explorer-bento-top">
+      <div className="explorer-control-grid">
         <SkillProfile skills={kaptenSkills} onSkillsChange={onSkillsChange} />
 
-        <section className="surface bento-panel" aria-labelledby="source-heading">
+        <section className="control-pane" aria-labelledby="source-heading">
           <div>
             <h2 id="source-heading" className="panel-heading">
               Sumber Data Lowongan
             </h2>
             <p className="panel-desc">
-              Pilih live API atau dataset magang Indonesia lokal.
+              Beralih antara Remotive Live API dan dataset magang tech lokal.
             </p>
           </div>
 
@@ -151,10 +165,6 @@ export default function JobExplorer({
                 <Globe size={15} aria-hidden="true" />
                 <span>Remotive API (Live)</span>
               </span>
-              <span
-                className={`dot-anchor ${!useFallback ? '' : 'is-neutral'}`}
-                aria-hidden="true"
-              />
             </label>
 
             <label className={`source-radio ${useFallback ? 'is-selected' : ''}`}>
@@ -168,10 +178,6 @@ export default function JobExplorer({
                 <Database size={15} aria-hidden="true" />
                 <span>Dataset Magang ID (Lokal)</span>
               </span>
-              <span
-                className={`dot-anchor ${useFallback ? 'is-gold' : 'is-neutral'}`}
-                aria-hidden="true"
-              />
             </label>
           </div>
         </section>
@@ -179,21 +185,15 @@ export default function JobExplorer({
 
       <section className="board-section" aria-labelledby="recommended-jobs-heading">
         <div className="board-head">
-          <div>
-            <h2 id="recommended-jobs-heading" className="section-heading">
-              Lowongan Tersedia{' '}
-              {!loading && !error && (
-                <span className="section-count tabular-nums">
-                  ({filteredJobs.length})
-                </span>
-              )}
-            </h2>
-          </div>
-
-          <span className="badge badge-neutral">
-            <span className="badge-dot" aria-hidden="true" />
-            Urut: Match Tertinggi
-          </span>
+          <h2 id="recommended-jobs-heading" className="section-heading">
+            Lowongan Tersedia{' '}
+            {!loading && !error && (
+              <span className="section-count tabular-nums">
+                ({filteredJobs.length})
+              </span>
+            )}
+          </h2>
+          <span className="field-hint">Diurutkan dari kecocokan skill tertinggi</span>
         </div>
 
         <div className="toolbar">
@@ -217,7 +217,7 @@ export default function JobExplorer({
 
         {!loading && !error && categories.length > 1 && (
           <div
-            className="category-pills"
+            className="filter-tabs"
             role="group"
             aria-label="Filter kategori lowongan"
           >
@@ -227,7 +227,7 @@ export default function JobExplorer({
                 <button
                   key={cat}
                   type="button"
-                  className={`pill-toggle ${isSelected ? 'is-selected' : ''}`}
+                  className={`filter-tab ${isSelected ? 'is-selected' : ''}`}
                   aria-pressed={isSelected}
                   onClick={() => setCategory(cat)}
                 >
@@ -331,42 +331,51 @@ export default function JobExplorer({
           <div className="job-grid">
             {filteredJobs.map(({ job, match }) => {
               const tier = getMatchTier(match.score);
-              const alreadyApplied = isDuplicateApplication(
-                applications,
-                job.company_name,
-                job.title,
-              );
+              const existingApp = findMatchingApplication(job);
+              const isLockedFinal = existingApp ? isFinalStatus(existingApp.status) : false;
 
               return (
                 <article key={job.id} className="surface job-card">
                   <div className="job-card-top">
-                    <span className="category-tag">{job.category}</span>
-                    <span className={`badge badge-${tier} tabular-nums`}>
-                      <span className="badge-dot" aria-hidden="true" />
-                      {match.score}% Match
-                    </span>
+                    <div className="company-row">
+                      <div className="company-monogram" aria-hidden="true">
+                        {getCompanyInitials(job.company_name)}
+                      </div>
+                      <div className="company-info">
+                        <p className="company-name">{job.company_name}</p>
+                        <p className="company-loc">
+                          {job.candidate_required_location} · {job.category}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className="match-readout"
+                      aria-label={`Kecocokan skill ${match.score} persen`}
+                    >
+                      <div className="match-number-line">
+                        <span className={`match-score-num is-${tier} tabular-nums`}>
+                          {match.score}%
+                        </span>
+                        <span className="match-score-unit">Match</span>
+                      </div>
+                      <div className="match-bar-track" aria-hidden="true">
+                        <div
+                          className={`match-bar-fill is-${tier}`}
+                          style={{ width: `${match.score}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="job-title">{job.title}</h3>
-                  </div>
-
-                  <div className="company-row">
-                    <div className="company-monogram" aria-hidden="true">
-                      {getCompanyInitials(job.company_name)}
-                    </div>
-                    <div className="company-info">
-                      <p className="company-name">{job.company_name}</p>
-                      <p className="company-loc">{job.candidate_required_location}</p>
-                    </div>
-                  </div>
+                  <h3 className="job-title">{job.title}</h3>
 
                   {job.tags.length > 0 ? (
-                    <div className="skill-tag-group" aria-label="Skill yang dibutuhkan">
+                    <div className="skill-token-list" aria-label="Skill yang dibutuhkan">
                       {match.matchedSkills.map((skill) => (
                         <span
                           key={`m-${skill}`}
-                          className="skill-tag is-matched"
+                          className="skill-token is-matched"
                           title="Skill cocok"
                         >
                           <Check size={12} aria-hidden="true" />
@@ -376,7 +385,7 @@ export default function JobExplorer({
                       {match.missingSkills.slice(0, 7).map((skill) => (
                         <span
                           key={`x-${skill}`}
-                          className="skill-tag is-missing"
+                          className="skill-token is-missing"
                           title="Missing skill"
                         >
                           {skill}
@@ -384,7 +393,7 @@ export default function JobExplorer({
                       ))}
                       {match.missingSkills.length > 7 && (
                         <span
-                          className="category-tag tabular-nums"
+                          className="skill-token is-missing tabular-nums"
                           title={match.missingSkills.slice(7).join(', ')}
                         >
                           +{match.missingSkills.length - 7} lainnya
@@ -399,24 +408,36 @@ export default function JobExplorer({
 
                   <div className="job-card-footer">
                     <span className="job-salary tabular-nums">{job.salary}</span>
-                    <button
-                      type="button"
-                      className={`btn btn-sm ${alreadyApplied ? 'btn-secondary' : 'btn-primary'}`}
-                      disabled={alreadyApplied}
-                      onClick={() => onSaveToWishlist(job)}
-                    >
-                      {alreadyApplied ? (
-                        <>
-                          <Check size={14} aria-hidden="true" />
-                          Sudah Dilamar
-                        </>
-                      ) : (
-                        <>
-                          <BookmarkPlus size={14} aria-hidden="true" />
-                          Simpan ke Wishlist
-                        </>
-                      )}
-                    </button>
+
+                    {!existingApp ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onSaveToWishlist(job)}
+                      >
+                        <BookmarkPlus size={14} aria-hidden="true" />
+                        Simpan ke Wishlist
+                      </button>
+                    ) : isLockedFinal ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        disabled
+                      >
+                        <Check size={14} aria-hidden="true" />
+                        Selesai ({STATUS_LABELS[existingApp.status]})
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-cancel-toggle btn-sm"
+                        onClick={() => onCancelApplication?.(existingApp.id)}
+                        title="Klik untuk membatalkan lamaran ini (bisa di-Undo 5 detik)"
+                      >
+                        <X size={14} aria-hidden="true" />
+                        Batalkan Lamaran
+                      </button>
+                    )}
                   </div>
                 </article>
               );
