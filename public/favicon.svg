@@ -1,6 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="9" fill="#141513"/>
-  <path d="M7 9h7.5L11 16l3.5 7H7l3.5-7L7 9z" fill="#FAF1E4"/>
-  <path d="M16.5 9H25v14h-8.5l4-7-4-7z" fill="#0E5A27"/>
-  <circle cx="22.5" cy="11.5" r="2" fill="#EAB308"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="none">
+  <style>
+    .left { fill: #0d0e0c; }
+    .right { fill: #0a5c26; }
+    @media (prefers-color-scheme: dark) {
+      .left { fill: #f4f3ee; }
+      .right { fill: #1b9445; }
+    }
+  </style>
+  <path class="left" d="M2 6h12L8.5 18 14 30H2l5.5-12L2 6z"/>
+  <path class="right" d="M18 6h16v24H18l6-12-6-12z"/>
 </svg>
