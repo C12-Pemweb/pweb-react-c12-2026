@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Briefcase, Compass, Plus, Scale } from 'lucide-react';
 import type { Application, ApplicationStatus } from './types/application';
 import { STATUS_LABELS } from './types/application';
@@ -20,10 +20,17 @@ import WarRoom from './components/WarRoom';
 import ApplicationDetail from './components/ApplicationDetail';
 import OfferComparator from './components/OfferComparator';
 import ApplicationForm from './components/ApplicationForm';
+import UndoToast from './components/UndoToast';
 
 type ActiveTab = 'explore' | 'pipeline' | 'compare';
 
+interface PendingUndo {
+  application: Application;
+  index: number;
+}
+
 const DEFAULT_SKILLS = ['React', 'TypeScript', 'CSS'];
+const UNDO_DURATION_SECONDS = 5;
 
 function describeTransition(
   from: ApplicationStatus,
@@ -58,9 +65,25 @@ export default function App() {
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
+  const [pendingUndo, setPendingUndo] = useState<PendingUndo | null>(null);
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(UNDO_DURATION_SECONDS);
+  const undoTimeoutRef = useRef<number | null>(null);
+  const undoIntervalRef = useRef<number | null>(null);
+
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 60_000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current !== null) {
+        window.clearTimeout(undoTimeoutRef.current);
+      }
+      if (undoIntervalRef.current !== null) {
+        window.clearInterval(undoIntervalRef.current);
+      }
+    };
   }, []);
 
   const conflicts = useMemo(
@@ -75,6 +98,17 @@ export default function App() {
     () => applications.find((app) => app.id === selectedAppId) ?? null,
     [applications, selectedAppId],
   );
+
+  function clearUndoTimers() {
+    if (undoTimeoutRef.current !== null) {
+      window.clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
+    }
+    if (undoIntervalRef.current !== null) {
+      window.clearInterval(undoIntervalRef.current);
+      undoIntervalRef.current = null;
+    }
+  }
 
   function handleAddApplication(newApp: Application) {
     setApplications((prev) => [newApp, ...prev]);
@@ -227,10 +261,45 @@ export default function App() {
   }
 
   function handleDeleteApplication(id: string) {
+    const targetIndex = applications.findIndex((app) => app.id === id);
+    if (targetIndex === -1) return;
+
+    const deletedApp = applications[targetIndex];
     setApplications((prev) => prev.filter((app) => app.id !== id));
     if (selectedAppId === id) {
       setSelectedAppId(null);
     }
+
+    // Bersihkan timer lama memakai useRef saat hapus berturut-turut < 5 detik
+    clearUndoTimers();
+    setPendingUndo({ application: deletedApp, index: targetIndex });
+    setUndoSecondsLeft(UNDO_DURATION_SECONDS);
+
+    undoIntervalRef.current = window.setInterval(() => {
+      setUndoSecondsLeft((prev) => Math.max(1, prev - 1));
+    }, 1000);
+
+    undoTimeoutRef.current = window.setTimeout(() => {
+      clearUndoTimers();
+      setPendingUndo(null);
+    }, UNDO_DURATION_SECONDS * 1000);
+  }
+
+  function handleUndoDelete() {
+    if (!pendingUndo) return;
+    const { application, index } = pendingUndo;
+    clearUndoTimers();
+    setPendingUndo(null);
+
+    setApplications((prev) => {
+      if (prev.some((app) => app.id === application.id)) return prev;
+      const clampedIndex = Math.min(index, prev.length);
+      return [
+        ...prev.slice(0, clampedIndex),
+        application,
+        ...prev.slice(clampedIndex),
+      ];
+    });
   }
 
   return (
@@ -321,7 +390,8 @@ export default function App() {
         {activeTab === 'compare' && (
           <OfferComparator
             applications={applications}
-            ownedSkills={kaptenSkills}
+            kaptenSkills={kaptenSkills}
+            onGoToPipeline={() => setActiveTab('pipeline')}
           />
         )}
       </main>
@@ -347,6 +417,15 @@ export default function App() {
           onSimulateGhosting={handleSimulateGhosting}
           onDelete={handleDeleteApplication}
           onClose={() => setSelectedAppId(null)}
+        />
+      )}
+
+      {pendingUndo && (
+        <UndoToast
+          company={pendingUndo.application.company}
+          role={pendingUndo.application.role}
+          secondsLeft={undoSecondsLeft}
+          onUndo={handleUndoDelete}
         />
       )}
     </div>
