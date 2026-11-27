@@ -51,30 +51,11 @@ interface PendingUndo {
 
 const UNDO_DURATION_SECONDS = 5;
 
-const WORKSPACE_COPY: Record<
-  Exclude<AppView, 'landing'>,
-  { title: string; subtitle: string }
-> = {
-  explore: {
-    title: 'Eksplorasi Lowongan',
-    subtitle:
-      'Filter kategori, ukur kecocokan skill secara real-time, lalu simpan atau batalkan langsung dari kartu lowongan.',
-  },
-  pipeline: {
-    title: 'War Room Pipeline',
-    subtitle:
-      'Lacak progres lamaran dengan state machine ketat, agenda interview, deteksi ghosting, dan latihan wawancara berwaktu.',
-  },
-  compare: {
-    title: 'Offer Comparator',
-    subtitle:
-      'Bandingkan dua tawaran magang secara objektif dengan bobot 50% uang saku, 25% mode kerja, dan 25% kecocokan skill.',
-  },
-  cv: {
-    title: 'CV Vault',
-    subtitle:
-      'Simpan beberapa versi CV dan pilih dokumen spesifik saat melamar atau memindahkan status ke Applied.',
-  },
+const WORKSPACE_TITLES: Record<Exclude<AppView, 'landing'>, string> = {
+  explore: 'Eksplorasi Lowongan',
+  pipeline: 'War Room Pipeline',
+  compare: 'Offer Comparator',
+  cv: 'CV Vault',
 };
 
 function describeTransition(
@@ -622,7 +603,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="top-bar">
+      <header className={`top-bar ${activeView === 'landing' ? 'is-landing' : ''}`}>
         <div className="top-bar-inner">
           <button
             type="button"
@@ -747,12 +728,7 @@ export default function App() {
       ) : (
         <main className="app-main">
           <header className="workspace-header">
-            <div>
-              <h1 className="workspace-title">{WORKSPACE_COPY[activeView].title}</h1>
-              <p className="workspace-subtitle">
-                {WORKSPACE_COPY[activeView].subtitle}
-              </p>
-            </div>
+            <h1 className="workspace-title">{WORKSPACE_TITLES[activeView]}</h1>
 
             <div className="workspace-actions">
               {applications.length === 0 && (

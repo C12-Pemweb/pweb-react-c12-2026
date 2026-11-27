@@ -28,23 +28,17 @@ export default function OfferComparator({
       <section className="comparator-section" aria-labelledby="comparator-heading">
         <div>
           <h2 id="comparator-heading" className="section-heading">
-            Perbandingan Skor Berbobot
+            Skor Berbobot
           </h2>
-          <p className="section-subtitle">
-            Bobot penilaian: Uang Saku 50% · Mode Kerja 25% · Kecocokan Skill 25%
-          </p>
+          <p className="field-hint">Uang Saku 50% · Mode Kerja 25% · Skill 25%</p>
         </div>
 
         <div className="surface state-box">
           <div className="state-box-icon">
             <Scale size={20} aria-hidden="true" />
           </div>
-          <h3>Belum cukup offer untuk dibandingkan</h3>
-          <p className="tabular-nums">
-            Saat ini terdapat {offers.length} lamaran berstatus OFFER. Pindahkan minimal 2
-            lamaran ke status OFFER di War Room Pipeline agar Offer Comparator dapat
-            menghitung skor objektifnya.
-          </p>
+          <h3>Minimal 2 lamaran berstatus OFFER</h3>
+          <p className="tabular-nums">Saat ini: {offers.length} offer.</p>
           {onGoToPipeline && (
             <div className="state-box-actions">
               <button
@@ -53,7 +47,7 @@ export default function OfferComparator({
                 onClick={onGoToPipeline}
               >
                 <Briefcase size={14} aria-hidden="true" />
-                Buka Pipeline Lamaran
+                Buka Pipeline
               </button>
             </div>
           )}
@@ -91,11 +85,9 @@ export default function OfferComparator({
       <div className="comparator-bar">
         <div>
           <h2 id="comparator-heading" className="section-heading">
-            Perbandingan Skor Berbobot
+            Skor Berbobot
           </h2>
-          <p className="section-subtitle">
-            Bobot penilaian: Uang Saku 50% · Mode Kerja 25% · Kecocokan Skill 25%
-          </p>
+          <p className="field-hint">Uang Saku 50% · Mode Kerja 25% · Skill 25%</p>
         </div>
 
         <div className="comparator-selectors">

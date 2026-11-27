@@ -117,12 +117,9 @@ export default function WarRoom({
     <section className="warroom-section" aria-labelledby="warroom-heading">
       {scheduledInterviews.length > 0 && (
         <div className="agenda-strip" aria-label="Agenda interview terjadwal">
-          <div className="block-header">
-            <span className="block-title">
-              Agenda Interview Terjadwal ({scheduledInterviews.length})
-            </span>
-            <span className="field-hint">Klik jadwal untuk buka detail &amp; prep timer</span>
-          </div>
+          <span className="block-title">
+            Agenda Interview ({scheduledInterviews.length})
+          </span>
           <div className="agenda-items">
             {scheduledInterviews.map((app) => {
               const isConflict = conflictingIds.has(app.id);
@@ -233,11 +230,7 @@ export default function WarRoom({
           <div className="state-box-icon">
             <FolderOpen size={20} aria-hidden="true" />
           </div>
-          <h3>Pipeline lamaran masih kosong</h3>
-          <p>
-            Simpan lowongan dari Eksplorasi atau catat lamaran manual untuk mulai melacak
-            proses magang Kapten.
-          </p>
+          <h3>Belum ada lamaran</h3>
           <div className="state-box-actions">
             <button
               type="button"
@@ -245,14 +238,14 @@ export default function WarRoom({
               onClick={onOpenManualForm}
             >
               <Plus size={14} aria-hidden="true" />
-              Catat Lamaran Manual
+              Catat Lamaran
             </button>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
               onClick={onGoToExplorer}
             >
-              Lihat Eksplorasi Lowongan
+              Eksplorasi Lowongan
             </button>
           </div>
         </div>
@@ -262,7 +255,6 @@ export default function WarRoom({
             <SlidersHorizontal size={20} aria-hidden="true" />
           </div>
           <h3>Tidak ada lamaran sesuai filter</h3>
-          <p>Coba ubah filter status, pencarian teks, atau matikan filter Rawan Ghosting.</p>
           {hasActiveFilter && (
             <div className="state-box-actions">
               <button
