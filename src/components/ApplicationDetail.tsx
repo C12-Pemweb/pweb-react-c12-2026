@@ -5,6 +5,7 @@ import {
   Check,
   Clock,
   Download,
+  Eye,
   ListChecks,
   Lock,
   Plus,
@@ -38,6 +39,7 @@ import {
   getTodayYmd,
 } from '../utils/format';
 import InterviewPrepTimer from './InterviewPrepTimer';
+import CvPreviewModal from './CvPreviewModal';
 
 interface ApplicationDetailProps {
   application: Application;
@@ -98,6 +100,7 @@ export default function ApplicationDetail({
 
   const [newTaskText, setNewTaskText] = useState('');
   const [newNoteText, setNewNoteText] = useState('');
+  const [isCvPreviewOpen, setIsCvPreviewOpen] = useState(false);
   const inlineCvUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -233,15 +236,26 @@ export default function ApplicationDetail({
               {STATUS_LABELS[application.status]}
             </span>
 
+            {attachedCvDoc && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsCvPreviewOpen(true)}
+              >
+                <Eye size={13} aria-hidden="true" />
+                Preview CV
+              </button>
+            )}
+
             {attachedCvDoc?.dataUrl && (
               <a
                 href={attachedCvDoc.dataUrl}
                 download={attachedCvDoc.name}
                 className="btn btn-secondary btn-sm"
                 style={{ textDecoration: 'none' }}
+                aria-label={`Unduh ${attachedCvDoc.name}`}
               >
                 <Download size={13} aria-hidden="true" />
-                Unduh CV
               </a>
             )}
 
@@ -667,6 +681,14 @@ export default function ApplicationDetail({
           </div>
         </div>
       </div>
+
+      {isCvPreviewOpen && attachedCvDoc && (
+        <CvPreviewModal
+          cv={attachedCvDoc}
+          linkedApplications={[application]}
+          onClose={() => setIsCvPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Application } from '../types/application';
 import type { CvDocument } from '../types/cv';
+import { createSamplePdfDataUrl } from './cvStorage';
 import { simulateBackdateDays } from './ghosting';
 
 export const DEFAULT_KAPTEN_SKILLS: string[] = ['React', 'TypeScript', 'CSS'];
@@ -37,6 +38,19 @@ export function createDemoDataset(nowMs: number): {
       mimeType: 'application/pdf',
       uploadedAt: nowIso,
       isDefault: true,
+      dataUrl: createSamplePdfDataUrl('KAPTEN — FRONTEND ENGINEERING INTERN', [
+        'Surabaya, Indonesia  |  github.com/kapten-dev  |  kapten@student.its.ac.id',
+        '--------------------------------------------------------------------------------',
+        'RINGKASAN',
+        'Mahasiswa Teknik Informatika dengan fokus pada React 19, TypeScript strict, aksesibilitas UI, dan arsitektur state murni.',
+        '',
+        'SKILL UTAMA',
+        'React, TypeScript, CSS, HTML, JavaScript, Git, REST API, Testing',
+        '',
+        'PROYEK UNGGULAN',
+        '1. Aku Mw Magang — Aplikasi pelacak lamaran magang berbasis state machine & Offer Comparator.',
+        '2. Campus Event Hub — Platform penjadwalan kegiatan mahasiswa dengan pencarian debounced.',
+      ]),
     },
     {
       id: crypto.randomUUID(),
@@ -46,6 +60,19 @@ export function createDemoDataset(nowMs: number): {
       mimeType: 'application/pdf',
       uploadedAt: nowIso,
       isDefault: false,
+      dataUrl: createSamplePdfDataUrl('KAPTEN — FULL-STACK & CLOUD INTERN', [
+        'Surabaya, Indonesia  |  github.com/kapten-dev  |  kapten@student.its.ac.id',
+        '--------------------------------------------------------------------------------',
+        'RINGKASAN',
+        'Pengembang web full-stack berfokus pada integrasi API, database relasional, dan containerization.',
+        '',
+        'SKILL UTAMA',
+        'React, TypeScript, Node.js, PostgreSQL, Docker, Linux, REST API, Git',
+        '',
+        'PROYEK UNGGULAN',
+        '1. Sistem Manajemen Inventaris Lab — REST API PostgreSQL + frontend TypeScript.',
+        '2. CI/CD Sandbox Pipeline — Otomatisasi build & deploy container Docker.',
+      ]),
     },
   ];
 

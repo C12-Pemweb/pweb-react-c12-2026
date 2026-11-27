@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { Download, FileText, Star, Trash2, Upload } from 'lucide-react';
+import { Download, Eye, FileText, Star, Trash2, Upload } from 'lucide-react';
 import type { Application } from '../types/application';
 import type { CvDocument } from '../types/cv';
-import { formatFileSize, MAX_INLINE_CV_BYTES } from '../utils/cvStorage';
+import { formatFileSize } from '../utils/cvStorage';
 import { formatDate } from '../utils/format';
+import CvPreviewModal from './CvPreviewModal';
 
 interface CvVaultProps {
   cvDocuments: CvDocument[];
@@ -25,6 +26,7 @@ export default function CvVault({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewCvId, setPreviewCvId] = useState<string | null>(null);
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -36,19 +38,15 @@ export default function CvVault({
     }
   }
 
+  const previewCv = cvDocuments.find((c) => c.id === previewCvId) ?? null;
+
   return (
     <section className="cv-vault-stack" aria-labelledby="cv-vault-heading">
       <div className="board-head">
-        <div>
-          <h2 id="cv-vault-heading" className="section-heading">
-            Koleksi Dokumen CV{' '}
-            <span className="section-count tabular-nums">({cvDocuments.length})</span>
-          </h2>
-          <p className="section-subtitle">
-            Unggah beberapa versi CV (PDF/DOC/DOCX) lalu pilih versi yang sesuai saat
-            melamar atau memindahkan status ke Applied.
-          </p>
-        </div>
+        <h2 id="cv-vault-heading" className="section-heading">
+          Dokumen CV{' '}
+          <span className="section-count tabular-nums">({cvDocuments.length})</span>
+        </h2>
       </div>
 
       <div
@@ -65,15 +63,12 @@ export default function CvVault({
         }}
       >
         <div className="state-box-icon">
-          <Upload size={20} aria-hidden="true" />
+          <Upload size={19} aria-hidden="true" />
         </div>
         <h3 className="panel-heading">
-          {uploading ? 'Memproses dokumen CV...' : 'Unggah satu atau beberapa file CV'}
+          {uploading ? 'Mengunggah...' : 'Unggah CV (PDF / DOCX)'}
         </h3>
-        <p className="panel-desc">
-          Tarik file ke area ini atau pilih file PDF/DOC/DOCX. File hingga{' '}
-          {formatFileSize(MAX_INLINE_CV_BYTES)} disimpan penuh agar bisa diunduh kembali.
-        </p>
+        <p className="field-hint">Tarik file ke sini atau pilih banyak file sekaligus.</p>
 
         <input
           ref={fileInputRef}
@@ -95,7 +90,7 @@ export default function CvVault({
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload size={14} aria-hidden="true" />
-          Pilih File CV (Multi-Upload)
+          Pilih File CV
         </button>
       </div>
 
@@ -105,10 +100,6 @@ export default function CvVault({
             <FileText size={20} aria-hidden="true" />
           </div>
           <h3>Belum ada CV tersimpan</h3>
-          <p>
-            Unggah beberapa varian CV (misal versi Frontend, Full-Stack, atau Bahasa
-            Inggris) supaya Kapten tidak pernah lupa CV mana yang dikirim.
-          </p>
         </div>
       ) : (
         <div className="cv-grid">
@@ -130,7 +121,7 @@ export default function CvVault({
                     <div className="company-info">
                       <p className="company-name mono">{cv.name}</p>
                       <p className="company-loc tabular-nums">
-                        {formatFileSize(cv.fileSize)} · Diunggah {formatDate(cv.uploadedAt)}
+                        {formatFileSize(cv.fileSize)} · {formatDate(cv.uploadedAt)}
                       </p>
                     </div>
                   </div>
@@ -142,24 +133,32 @@ export default function CvVault({
 
                 <div className="field">
                   <label htmlFor={`cv-label-${cv.id}`} className="field-label">
-                    Label Fokus Posisi
+                    Label Posisi
                   </label>
                   <input
                     id={`cv-label-${cv.id}`}
                     className="input"
                     value={cv.label}
                     onChange={(e) => onUpdateLabel(cv.id, e.target.value)}
-                    placeholder="Misal: Frontend React & TypeScript"
+                    placeholder="Frontend / Full-Stack"
                   />
                 </div>
 
                 <p className="field-hint tabular-nums">
                   Dipakai di <strong>{usageCount}</strong> lamaran
-                  {!cv.dataUrl && ' · Hanya metadata tersimpan'}
                 </p>
 
                 <div className="cv-card-actions">
                   <div className="app-card-actions-right">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setPreviewCvId(cv.id)}
+                    >
+                      <Eye size={13} aria-hidden="true" />
+                      Preview
+                    </button>
+
                     {!cv.isDefault && (
                       <button
                         type="button"
@@ -167,7 +166,7 @@ export default function CvVault({
                         onClick={() => onSetDefault(cv.id)}
                       >
                         <Star size={13} aria-hidden="true" />
-                        Jadikan Utama
+                        Utama
                       </button>
                     )}
 
@@ -177,9 +176,9 @@ export default function CvVault({
                         download={cv.name}
                         className="btn btn-secondary btn-sm"
                         style={{ textDecoration: 'none' }}
+                        aria-label={`Unduh ${cv.name}`}
                       >
                         <Download size={13} aria-hidden="true" />
-                        Unduh
                       </a>
                     )}
                   </div>
@@ -197,6 +196,16 @@ export default function CvVault({
             );
           })}
         </div>
+      )}
+
+      {previewCv && (
+        <CvPreviewModal
+          cv={previewCv}
+          linkedApplications={applications.filter(
+            (app) => app.cvVersion?.trim().toLowerCase() === previewCv.name.toLowerCase(),
+          )}
+          onClose={() => setPreviewCvId(null)}
+        />
       )}
     </section>
   );

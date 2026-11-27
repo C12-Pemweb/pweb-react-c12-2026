@@ -59,6 +59,64 @@ export async function createCvFromFile(
   };
 }
 
+export function dataUrlToBlobUrl(dataUrl: string): string | null {
+  try {
+    const [header, base64] = dataUrl.split(',');
+    if (!header || !base64) return null;
+    const mimeMatch = /data:([^;]+);base64/.exec(header);
+    const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+    const binary = window.atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return URL.createObjectURL(new Blob([bytes], { type: mime }));
+  } catch {
+    return null;
+  }
+}
+
+function escapePdfText(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+/** Builds a minimal valid 1-page PDF data URL so demo CVs render live in preview. */
+export function createSamplePdfDataUrl(title: string, lines: readonly string[]): string {
+  const streamLines = [
+    'BT',
+    '/F1 18 Tf',
+    '56 760 Td',
+    `(${escapePdfText(title)}) Tj`,
+    '/F1 11 Tf',
+    '0 -26 Td',
+    ...lines.flatMap((line) => [`(${escapePdfText(line)}) Tj`, '0 -18 Td']),
+    'ET',
+  ].join('\n');
+
+  const objects = [
+    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+    '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
+    '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
+    `5 0 obj\n<< /Length ${streamLines.length} >>\nstream\n${streamLines}\nendstream\nendobj\n`,
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [];
+  for (const obj of objects) {
+    offsets.push(pdf.length);
+    pdf += obj;
+  }
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+  return `data:application/pdf;base64,${window.btoa(pdf)}`;
+}
+
 export function normalizeStoredCvs(raw: unknown): CvDocument[] {
   if (!Array.isArray(raw)) return [];
   return raw
