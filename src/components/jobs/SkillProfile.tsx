@@ -58,7 +58,7 @@ export default function SkillProfile({ skills, onSkillsChange }: SkillProfilePro
             setNewSkill(e.target.value);
             if (error) setError('');
           }}
-          placeholder="Tambah skill, misal Docker..."
+          placeholder="Tambah skill..."
         />
         <button type="submit" className="btn btn-primary btn-sm" style={{ height: 38 }}>
           <Plus size={15} aria-hidden="true" />

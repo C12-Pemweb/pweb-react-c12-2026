@@ -1617,7 +1617,7 @@ ol {
   }
 
   .explorer-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .explorer-sidebar {
@@ -1625,7 +1625,7 @@ ol {
   }
 
   .detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1637,18 +1637,45 @@ ol {
   .nav-tabs {
     order: 3;
     width: 100%;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nav-tab {
+    justify-content: center;
+    padding: 0.45rem 0.4rem;
+    font-size: 0.78rem;
+    gap: 0.3rem;
+  }
+
+  .nav-tab svg {
+    display: none;
+  }
+
+  .toolbar-select {
+    width: 100%;
+    min-width: 0;
   }
 
   .kpi-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .kpi-cell:nth-child(even) {
+    border-right: none;
+  }
+
+  .kpi-cell:last-child {
+    grid-column: 1 / -1;
+    border-right: none;
+    border-bottom: none;
+  }
+
   .job-grid,
   .pipeline-grid,
   .comparator-grid,
   .form-grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .offer-row {
@@ -1663,14 +1690,14 @@ ol {
 
 @media (max-width: 480px) {
   .app-main {
-    padding: 1rem 0.85rem 3rem;
-  }
-
-  .kpi-strip {
-    grid-template-columns: 1fr;
+    padding: 0.9rem 0.85rem 3rem;
   }
 
   .kpi-cell {
-    border-right: none;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .kpi-value {
+    font-size: 1.35rem;
   }
 }
